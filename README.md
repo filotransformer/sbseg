@@ -124,8 +124,6 @@ O corpus base é o **PHEME v.7** (Figshare). Esta cópia já está:
 * com campo de veracidade em `label` (`1=rumeur/rumor`, `0=non‑rumor`)
 * anonimizada para fins de revisão duplo‑cego.
 
-Caso deseje reconstruir a partir do repositório oficial, siga `datasets/README_pheme.md` (não incluído).
-
 ---
 
 ## Licença
