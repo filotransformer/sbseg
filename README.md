@@ -12,7 +12,7 @@ Este repositório contém o código, os dados e o material suplementar que acomp
 
 ---
 
-## 📂 Estrutura do projeto
+## Estrutura do projeto
 
 ```
 filo-trans-repo/
@@ -29,7 +29,7 @@ filo-trans-repo/
 
 ---
 
-## ⚙️ Instalação rápida
+## Instalação rápida
 
 ```bash
 # 1. Clone o repositório
@@ -59,7 +59,7 @@ Veja `requirements.txt` para a lista completa.
 
 ---
 
-### 📦 Dependências completas (`requirements.txt`)
+### Dependências completas (`requirements.txt`)
 
 ```text
 numpy
@@ -88,7 +88,7 @@ getpass
 
 ---
 
-## 🚀 Como reproduzir os experimentos
+## Como reproduzir os experimentos
 
 0. **Executar no Google Colab:** clique no badge “Open In Colab” acima ou acesse diretamente [este link](https://colab.research.google.com/drive/1KAVv9DYrWz-FnOf6X6toRrwN5CW8bIiv?usp=sharing).
 1. (Opcional) Baixe o repositório localmente e abra \`\` em Jupyter.
@@ -103,7 +103,7 @@ Parâmetros de *cross‑validation*, *seed* e *threshold* podem ser alterados no
 
 ---
 
-## 📊 Resultados principais (dataset PHEME)
+## Resultados principais (dataset PHEME)
 
 | Modelo                            | Acc        | AUC        | Recall     | F1         |
 | --------------------------------- | ---------- | ---------- | ---------- | ---------- |
@@ -116,7 +116,7 @@ Parâmetros de *cross‑validation*, *seed* e *threshold* podem ser alterados no
 
 ---
 
-## 📑 Dados
+## Dados
 
 O corpus base é o **PHEME v.7** (Figshare). Esta cópia já está:
 
@@ -128,13 +128,10 @@ Caso deseje reconstruir a partir do repositório oficial, siga `datasets/README_
 
 ---
 
-## 📜 Licença
+## Licença
 
 Distribuído sob a licença **MIT**. Veja [`LICENSE`](LICENSE) para detalhes. Os dados PHEME mantêm sua licença original (Creative Commons Attribution).
 
 ---
 
-
-
----
 
