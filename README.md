@@ -1,6 +1,6 @@
 # Filo‑Transformer Repository
 
-<p align="center"><img src="images/Filo-Transformer.png" alt="Filo-Transformer logo" width="280"/></p>
+<p align="center"><img src="images/logo.png" alt="Filo-Transformer logo" width="280"/></p>
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1KAVv9DYrWz-FnOf6X6toRrwN5CW8bIiv?usp=sharing)
 
