@@ -6,7 +6,7 @@
 
 *Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News*
 
-Este repositório contém o código, os dados e o material suplementar que acompanham o artigo submetido ao **Simpósio Brasileiro de Segurança da Informação e de Sistemas Computacionais (SBSeg 2025)**.
+Este repositório contém o código, os dados e o material suplementar que acompanham o artigo submetido ao **Simpósio Brasileiro de Cibersegurança (SBSeg 2025)**.
 
 > **Resumo curto** ‑ Propomos um pipeline que combina *embeddings* semânticos, reconstrução filogenética com **Tree Alignment Graphs (TAGs)** e um **FT‑Transformer** supervisionado, alcançando **AUC 0.9489** e **F1 0.8393** no *benchmark* PHEME.
 
