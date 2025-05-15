@@ -33,8 +33,8 @@ filo-trans-repo/
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/<seu‑usuario>/filo-trans-repo.git
-cd filo-trans-repo
+git clone https://github.com/filotransformer/sbseg.git
+cd sbseg
 
 # 2. Crie um ambiente Python 3.10+
 python -m venv .venv
