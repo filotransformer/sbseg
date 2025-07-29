@@ -500,58 +500,24 @@ class FiloTransformerExperiment:
             tuple: (texts, labels) onde texts são os tweets e labels são 0/1
         """
         try:
-            # Implementação do carregamento permanece a mesma
-            dataset_path = self.dataset_path
-            
             print("📂 Carregando dataset PHEME...")
-            if not os.path.exists(dataset_path):
-                print(f"❌ Erro: Dataset não encontrado em {dataset_path}")
-                print("Por favor, certifique-se de que o dataset PHEME está no diretório correto.")
+            csv_path = os.path.join(self.dataset_path, 'pheme_all.csv')
+            
+            if not os.path.exists(csv_path):
+                print(f"❌ Erro: Dataset não encontrado em {csv_path}")
+                print("Por favor, certifique-se de que o arquivo pheme_all.csv está no diretório datasets/pheme/")
                 return None, None
-                
-            # Carregar tweets
-            rumor_tweets = []
-            non_rumor_tweets = []
             
-            # Estrutura do dataset PHEME
-            for event in os.listdir(dataset_path):
-                event_path = os.path.join(dataset_path, event)
-                if not os.path.isdir(event_path):
-                    continue
-                    
-                # Rumores
-                rumor_path = os.path.join(event_path, 'rumours')
-                if os.path.exists(rumor_path):
-                    for rumor_id in os.listdir(rumor_path):
-                        tweet_path = os.path.join(rumor_path, rumor_id, 'source-tweets', f'{rumor_id}.json')
-                        if os.path.exists(tweet_path):
-                            try:
-                                with open(tweet_path, 'r', encoding='utf-8') as f:
-                                    tweet = pd.read_json(f, typ='series')
-                                    rumor_tweets.append(tweet['text'])
-                            except:
-                                pass
-                                
-                # Não-rumores
-                non_rumor_path = os.path.join(event_path, 'non-rumours')
-                if os.path.exists(non_rumor_path):
-                    for rumor_id in os.listdir(non_rumor_path):
-                        tweet_path = os.path.join(non_rumor_path, rumor_id, 'source-tweets', f'{rumor_id}.json')
-                        if os.path.exists(tweet_path):
-                            try:
-                                with open(tweet_path, 'r', encoding='utf-8') as f:
-                                    tweet = pd.read_json(f, typ='series')
-                                    non_rumor_tweets.append(tweet['text'])
-                            except:
-                                pass
+            # Carregar dados do CSV
+            df = pd.read_csv(csv_path)
             
-            # Criar arrays
-            texts = rumor_tweets + non_rumor_tweets
-            labels = [1] * len(rumor_tweets) + [0] * len(non_rumor_tweets)
+            # Remover linhas com texto vazio ou NaN
+            df = df.dropna(subset=['text', 'label'])
+            df = df[df['text'].str.strip() != '']
             
-            # Converter para numpy arrays
-            texts = np.array(texts)
-            labels = np.array(labels)
+            # Extrair textos e labels
+            texts = df['text'].values
+            labels = df['label'].values
             
             print(f"✅ Dataset carregado: {len(texts)} tweets")
             print(f"   - Rumores: {sum(labels)} ({sum(labels)/len(labels)*100:.1f}%)")
