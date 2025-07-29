@@ -7,6 +7,21 @@ Este script implementa o modelo Filo-Transformer que combina:
 2. Construção de grafos filogenéticos (simulado)
 3. Extração de características TAG (Tree Alignment Graph)
 4. Classificação usando modelo supervisionado
+
+Autor: Acauan Cardoso Ribeiro, Eduardo Luzeiro Feitosa, André Carvalho
+Instituição: UNIVERSIDADE FEDERAL DE RORAIMA, UNIVERSIDADE FEDERAL DO AMAZONAS
+Conferência: SBSeg 2025
+Artigo: #10657
+
+Dependências:
+    - numpy>=1.21.0
+    - pandas>=1.3.0 
+    - scikit-learn>=1.1.0
+
+Uso:
+    python run_experiment.py
+
+Licença: MIT
 """
 
 import os
@@ -453,11 +468,259 @@ def run_filo_transformer_experiment():
     
     return True
 
+class FiloTransformerExperiment:
+    """
+    Classe principal para experimentos do Filo-Transformer.
+    
+    Esta classe encapsula todo o pipeline de detecção de fake news,
+    incluindo carregamento de dados, extração de características,
+    treinamento e avaliação dos modelos.
+    
+    Attributes:
+        dataset_path (str): Caminho para o dataset PHEME
+        random_state (int): Seed para reprodutibilidade
+    """
+    
+    def __init__(self, dataset_path='datasets/pheme', random_state=4321):
+        """
+        Inicializa o experimento.
+        
+        Args:
+            dataset_path: Caminho para o diretório do dataset
+            random_state: Seed para garantir reprodutibilidade
+        """
+        self.dataset_path = dataset_path
+        self.random_state = random_state
+        
+    def load_data(self):
+        """
+        Carrega o dataset PHEME.
+        
+        Returns:
+            tuple: (texts, labels) onde texts são os tweets e labels são 0/1
+        """
+        try:
+            # Implementação do carregamento permanece a mesma
+            dataset_path = self.dataset_path
+            
+            print("📂 Carregando dataset PHEME...")
+            if not os.path.exists(dataset_path):
+                print(f"❌ Erro: Dataset não encontrado em {dataset_path}")
+                print("Por favor, certifique-se de que o dataset PHEME está no diretório correto.")
+                return None, None
+                
+            # Carregar tweets
+            rumor_tweets = []
+            non_rumor_tweets = []
+            
+            # Estrutura do dataset PHEME
+            for event in os.listdir(dataset_path):
+                event_path = os.path.join(dataset_path, event)
+                if not os.path.isdir(event_path):
+                    continue
+                    
+                # Rumores
+                rumor_path = os.path.join(event_path, 'rumours')
+                if os.path.exists(rumor_path):
+                    for rumor_id in os.listdir(rumor_path):
+                        tweet_path = os.path.join(rumor_path, rumor_id, 'source-tweets', f'{rumor_id}.json')
+                        if os.path.exists(tweet_path):
+                            try:
+                                with open(tweet_path, 'r', encoding='utf-8') as f:
+                                    tweet = pd.read_json(f, typ='series')
+                                    rumor_tweets.append(tweet['text'])
+                            except:
+                                pass
+                                
+                # Não-rumores
+                non_rumor_path = os.path.join(event_path, 'non-rumours')
+                if os.path.exists(non_rumor_path):
+                    for rumor_id in os.listdir(non_rumor_path):
+                        tweet_path = os.path.join(non_rumor_path, rumor_id, 'source-tweets', f'{rumor_id}.json')
+                        if os.path.exists(tweet_path):
+                            try:
+                                with open(tweet_path, 'r', encoding='utf-8') as f:
+                                    tweet = pd.read_json(f, typ='series')
+                                    non_rumor_tweets.append(tweet['text'])
+                            except:
+                                pass
+            
+            # Criar arrays
+            texts = rumor_tweets + non_rumor_tweets
+            labels = [1] * len(rumor_tweets) + [0] * len(non_rumor_tweets)
+            
+            # Converter para numpy arrays
+            texts = np.array(texts)
+            labels = np.array(labels)
+            
+            print(f"✅ Dataset carregado: {len(texts)} tweets")
+            print(f"   - Rumores: {sum(labels)} ({sum(labels)/len(labels)*100:.1f}%)")
+            print(f"   - Não-rumores: {len(labels) - sum(labels)} ({(1 - sum(labels)/len(labels))*100:.1f}%)")
+            
+            return texts, labels
+            
+        except Exception as e:
+            print(f"❌ Erro ao carregar dataset: {e}")
+            return None, None
+    
+    def extract_semantic_features(self, texts):
+        """
+        Extrai características semânticas usando TF-IDF.
+        
+        Args:
+            texts: Lista de textos
+            
+        Returns:
+            np.array: Matriz de características TF-IDF
+        """
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        vectorizer = TfidfVectorizer(max_features=500, stop_words='english')
+        return vectorizer.fit_transform(texts).toarray()
+    
+    def extract_phylogenetic_features(self, texts):
+        """
+        Extrai características filogenéticas (função já definida anteriormente).
+        
+        Args:
+            texts: Lista de textos
+            
+        Returns:
+            np.array: Matriz de características filogenéticas
+        """
+        return extract_phylogenetic_features(texts)
+    
+    def run_experiment(self, test_mode=False):
+        """
+        Executa o experimento completo.
+        
+        Args:
+            test_mode: Se True, executa apenas um teste rápido
+            
+        Returns:
+            dict: Resultados dos experimentos
+        """
+        # Carregar dados
+        texts, labels = self.load_data()
+        if texts is None:
+            return None
+            
+        if test_mode:
+            # Modo de teste rápido
+            print("\n🧪 MODO DE TESTE RÁPIDO")
+            print("="*50)
+            print(f"✅ {len(texts)} amostras carregadas")
+            
+            # Usar apenas 100 amostras
+            indices = np.random.choice(len(texts), 100, replace=False)
+            texts_sample = texts[indices]
+            labels_sample = labels[indices]
+            
+            # Extrair características
+            print("Extraindo características...")
+            semantic_feat = self.extract_semantic_features(texts_sample)
+            phylo_feat = self.extract_phylogenetic_features(texts_sample)
+            
+            print(f"✅ Características semânticas: {semantic_feat.shape}")
+            print(f"✅ Características filogenéticas: {phylo_feat.shape}")
+            
+            # Treinar modelos simples
+            print("Treinando modelos...")
+            from sklearn.model_selection import train_test_split
+            from sklearn.ensemble import RandomForestClassifier
+            
+            X_train_sem, X_test_sem, y_train, y_test = train_test_split(
+                semantic_feat, labels_sample, test_size=0.3, random_state=42
+            )
+            
+            # Baseline
+            clf_baseline = RandomForestClassifier(n_estimators=10, random_state=42)
+            clf_baseline.fit(X_train_sem, y_train)
+            baseline_score = roc_auc_score(y_test, clf_baseline.predict_proba(X_test_sem)[:, 1])
+            
+            # Filo-Transformer
+            X_train_filo = np.hstack([X_train_sem, phylo_feat[:70]])
+            X_test_filo = np.hstack([X_test_sem, phylo_feat[70:]])
+            
+            clf_filo = RandomForestClassifier(n_estimators=10, random_state=42)
+            clf_filo.fit(X_train_filo, y_train)
+            filo_score = roc_auc_score(y_test, clf_filo.predict_proba(X_test_filo)[:, 1])
+            
+            print(f"✅ Baseline AUC: {baseline_score:.2f}")
+            print(f"✅ Filo-Transformer AUC: {filo_score:.2f}")
+            print(f"🎯 Melhoria: {(filo_score - baseline_score) / baseline_score * 100:+.1f}%")
+            print("="*50)
+            print("✅ TESTE CONCLUÍDO COM SUCESSO!")
+            
+            return {'test': 'success'}
+            
+        # Modo normal - executa experimento completo
+        return run_filo_transformer_experiment()
+    
+    def analyze_features(self):
+        """
+        Analisa a importância das características filogenéticas.
+        
+        Returns:
+            dict: Análise detalhada das características
+        """
+        texts, labels = self.load_data()
+        if texts is None:
+            return None
+            
+        print("\n🎯 ANÁLISE DE CARACTERÍSTICAS FILOGENÉTICAS")
+        print("="*50)
+        
+        # Extrair características
+        phylo_features = self.extract_phylogenetic_features(texts)
+        
+        # Nomes das características
+        feature_names = [
+            'Padrões de Casualidade', 'Triggers Imediatos', 'Pré-condições',
+            'Apelos à Ação', 'Marcadores Temporais', 'Padrões de Localização',
+            'Padrões de Persona', 'Amplificação', 'Emoção', 'Incerteza', 
+            'Autoridade', 'Urgência', 'Polarização', 'Manipulação'
+        ]
+        
+        # Calcular médias por classe
+        rumor_mask = labels == 1
+        non_rumor_mask = ~rumor_mask
+        
+        rumor_means = phylo_features[rumor_mask].mean(axis=0)
+        non_rumor_means = phylo_features[non_rumor_mask].mean(axis=0)
+        
+        # Calcular diferenças
+        differences = rumor_means - non_rumor_means
+        sorted_indices = np.argsort(np.abs(differences))[::-1]
+        
+        print("\n🎯 CARACTERÍSTICAS MAIS DISCRIMINATIVAS:")
+        print("="*50)
+        for i in sorted_indices[:5]:
+            diff_percent = (differences[i] / non_rumor_means[i]) * 100 if non_rumor_means[i] != 0 else 0
+            print(f"{feature_names[i]:25} → {diff_percent:+6.1f}% em rumores")
+            
+        return {'analysis': 'complete'}
+
 if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Filo-Transformer: Detecção de Fake News')
+    parser.add_argument('--test', action='store_true', help='Executa teste rápido')
+    parser.add_argument('--analyze-features', action='store_true', help='Analisa características filogenéticas')
+    
+    args = parser.parse_args()
+    
     try:
-        success = run_filo_transformer_experiment()
-        if not success:
-            sys.exit(1)
+        experiment = FiloTransformerExperiment()
+        
+        if args.test:
+            experiment.run_experiment(test_mode=True)
+        elif args.analyze_features:
+            experiment.analyze_features()
+        else:
+            # Executa experimento completo
+            success = run_filo_transformer_experiment()
+            if not success:
+                sys.exit(1)
     except Exception as e:
         print(f"\n❌ Erro durante execução: {e}")
         sys.exit(1)
