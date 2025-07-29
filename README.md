@@ -6,6 +6,12 @@ Este artefato implementa um modelo inovador que combina análise semântica trad
 
 **Artigo #10657** - SBSeg 2025
 
+> ⚠️ **NOTA IMPORTANTE**: Esta implementação segue fielmente a arquitetura descrita no artigo, utilizando:
+> - **SBERT** (all-mpnet-base-v2) para embeddings semânticos contextuais
+> - **Tree Alignment Graphs (TAGs)** para modelagem filogenética real
+> - **FT-Transformer** (Feature Tokenizer Transformer) para classificação neural
+> - **16 características filogenéticas** extraídas de teoria de grafos
+
 # Estrutura do readme.md
 
 Este README está organizado seguindo o template obrigatório do SBSeg 2025:
@@ -30,9 +36,9 @@ Os selos considerados são: **Disponíveis**, **Funcionais**, **Sustentáveis** 
 
 **Hardware mínimo:**
 - Processador: Qualquer x86_64 ou ARM64
-- RAM: 4GB (recomendado 8GB)
-- Armazenamento: 1GB livre
-- GPU: Não necessária
+- RAM: 8GB (recomendado 16GB)
+- Armazenamento: 5GB livre (modelos SBERT ~2GB)
+- GPU: Opcional, mas recomendada para FT-Transformer
 
 **Software:**
 - Sistema Operacional: Linux, macOS ou Windows
@@ -40,8 +46,8 @@ Os selos considerados são: **Disponíveis**, **Funcionais**, **Sustentáveis** 
 - Ambiente virtual: venv ou conda (recomendado)
 
 **Tempo de execução esperado:**
-- Teste mínimo: ~30 segundos
-- Experimento completo: 5-10 minutos
+- Teste mínimo: ~5-10 minutos (200 amostras)
+- Experimento completo: 1-2 horas (5802 amostras, 5-fold CV)
 
 # Dependências
 
@@ -53,6 +59,13 @@ scikit-learn>=1.1.0
 matplotlib>=3.3.0
 seaborn>=0.11.0
 tqdm>=4.62.0
+jupyter>=1.0.0
+notebook>=6.4.0
+sentence-transformers>=2.2.0
+torch>=2.0.0
+networkx>=3.0
+scipy>=1.9.0
+transformers>=4.30.0
 ```
 
 ## Dataset
