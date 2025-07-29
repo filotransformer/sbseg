@@ -1,8 +1,15 @@
-# Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News
+# Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News
 
-**Resumo:** Este artefato implementa o modelo Filo-Transformer apresentado no artigo "Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News" submetido ao XXV Simpósio Brasileiro de Cibersegurança (SBSeg 2025). O modelo combina reconstrução filogenética usando Tree Alignment Graphs (TAGs) com arquitetura FT-Transformer para detecção de fake news, alcançando AUC 0.9489 e F1 0.8393 no benchmark PHEME.
+**Resumo:** Este artefato implementa o modelo Filo-Transformer apresentado no artigo "Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News" submetido ao XXV Simpósio Brasileiro de Cibersegurança (SBSeg 2025). O modelo combina reconstrução filogenética usando Tree Alignment Graphs (TAGs) com arquitetura FT-Transformer para detecção de fake news, alcançando AUC 0.9489 e F1 0.8393 no benchmark PHEME.
 
-**Título do Artigo:** Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News
+**Título do Artigo:** Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News
+
+**Artigo:** #10657
+
+**Autores:**
+- Acauan Cardoso Ribeiro (UNIVERSIDADE FEDERAL DE RORAIMA)
+- Eduardo Luzeiro Feitosa (UNIVERSIDADE FEDERAL DO AMAZONAS)
+- André Carvalho (UNIVERSIDADE FEDERAL DO AMAZONAS)
 
 **Resumo do Artigo:** Propomos um pipeline que combina embeddings semânticos, reconstrução filogenética com Tree Alignment Graphs (TAGs) e um FT-Transformer supervisionado para detecção de rumores e fake news. A abordagem modela a propagação de informações como uma árvore filogenética, extraindo características evolutivas que capturam padrões de mutação e recombinação típicos de desinformação.
 
@@ -395,9 +402,10 @@ Se usar este artefato em sua pesquisa, por favor cite:
 
 ```bibtex
 @inproceedings{filo-transformer-2025,
-    title={Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News},
-    author={[Autores]},
+    title={Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News},
+    author={Acauan Cardoso Ribeiro and Eduardo Luzeiro Feitosa and André Carvalho},
     booktitle={XXV Simpósio Brasileiro de Cibersegurança (SBSeg 2025)},
-    year={2025}
+    year={2025},
+    note={Artigo \#10657}
 }
 ```
