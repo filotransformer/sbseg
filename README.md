@@ -99,7 +99,7 @@ pip install -r requirements.txt
 
 ## 4. Verifique a instalação
 ```bash
-python -c "import numpy, pandas, sklearn; print('✅ Instalação concluída com sucesso!')"
+python -c "import numpy, pandas, sklearn; print('Instalação concluída com sucesso')"
 ```
 
 # Teste mínimo
