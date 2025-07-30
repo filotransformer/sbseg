@@ -25,10 +25,14 @@ def check_processed_exists() -> bool:
         bool: True se o dataset processado existe, False caso contrário
     """
     processed_path = Path("datasets/processed")
+    # Verifica todos os arquivos necessários
     required_files = [
         "pheme_processed_cascades.csv",
+        "pheme_processed_cascades_tags.csv",
         "pheme_simplified.csv",
-        "pheme_metadata.json"
+        "pheme_metadata.json",
+        "pheme_metadata_tags.json",
+        "pheme_semantic_embeddings.pkl"
     ]
     
     if not processed_path.exists():
@@ -113,7 +117,7 @@ def verify_extraction(datasets_dir: Path) -> bool:
 
 def run_processing_script() -> bool:
     """
-    Executa o script de processamento process_pheme.py.
+    Executa os scripts de processamento.
     
     Returns:
         bool: True se o processamento foi bem-sucedido
@@ -122,23 +126,40 @@ def run_processing_script() -> bool:
         print("\n🔄 Iniciando processamento dos dados PHEME...")
         print("   Este processo pode levar alguns minutos...")
         
-        # Executa o script de processamento
+        # Primeiro executa o processamento básico
+        print("\n📊 ETAPA 2.1: Processamento básico (12 features)...")
         result = subprocess.run(
             [sys.executable, "scripts/process_pheme.py"],
             capture_output=True,
             text=True
         )
         
+        if result.returncode != 0:
+            print("❌ Erro durante o processamento básico:")
+            print(result.stderr)
+            return False
+        
+        print("✅ Processamento básico concluído!")
+        
+        # Depois executa o processamento com TAGs
+        print("\n🧬 ETAPA 2.2: Processamento com TAGs (70 features)...")
+        print("   Extraindo features filogenéticas avançadas...")
+        result = subprocess.run(
+            [sys.executable, "scripts/process_pheme_with_tags.py"],
+            capture_output=True,
+            text=True
+        )
+        
         if result.returncode == 0:
-            print("✅ Processamento concluído com sucesso!")
+            print("✅ Processamento com TAGs concluído com sucesso!")
             return True
         else:
-            print("❌ Erro durante o processamento:")
+            print("❌ Erro durante o processamento com TAGs:")
             print(result.stderr)
             return False
             
     except Exception as e:
-        print(f"❌ Erro ao executar script de processamento: {e}")
+        print(f"❌ Erro ao executar scripts de processamento: {e}")
         return False
 
 def check_dataset_integrity() -> bool:
@@ -150,11 +171,14 @@ def check_dataset_integrity() -> bool:
     """
     processed_path = Path("datasets/processed")
     
-    # Verifica arquivos principais
+    # Verifica todos os arquivos necessários
     required_files = {
-        "pheme_processed_cascades.csv": "Dataset principal com cascatas processadas",
-        "pheme_simplified.csv": "Versão simplificada do dataset",
-        "pheme_metadata.json": "Metadados do processamento"
+        "pheme_processed_cascades.csv": "Dataset básico (12 features)",
+        "pheme_processed_cascades_tags.csv": "Dataset com TAGs (70 features)",
+        "pheme_simplified.csv": "Versão simplificada",
+        "pheme_metadata.json": "Metadados básicos",
+        "pheme_metadata_tags.json": "Metadados TAGs",
+        "pheme_semantic_embeddings.pkl": "Embeddings semânticos"
     }
     
     print("\n🔍 Verificando integridade dos arquivos processados...")
@@ -169,19 +193,31 @@ def check_dataset_integrity() -> bool:
             print(f"❌ {filename} - NÃO ENCONTRADO")
             all_ok = False
     
-    # Verifica metadados
-    if all_ok:
+    # Verifica metadados básicos
+    if (processed_path / "pheme_metadata.json").exists():
         try:
             with open(processed_path / "pheme_metadata.json", 'r') as f:
                 metadata = json.load(f)
             
-            print(f"\n📊 Estatísticas do dataset:")
+            print(f"\n📊 Estatísticas do dataset básico:")
             print(f"   Total de cascatas: {metadata.get('total_cascades', 'N/A')}")
             print(f"   Eventos: {', '.join(metadata.get('events', []))}")
-            print(f"   Cascatas com reactions: {metadata.get('stats', {}).get('cascades_with_reactions', 'N/A')}")
             
         except Exception as e:
-            print(f"⚠️  Não foi possível ler metadados: {e}")
+            print(f"⚠️  Não foi possível ler metadados básicos: {e}")
+    
+    # Verifica metadados TAGs
+    if (processed_path / "pheme_metadata_tags.json").exists():
+        try:
+            with open(processed_path / "pheme_metadata_tags.json", 'r') as f:
+                metadata_tags = json.load(f)
+            
+            print(f"\n🧬 Estatísticas do dataset com TAGs:")
+            print(f"   Features filogenéticas: {metadata_tags.get('num_phylo_features', 'N/A')}")
+            print(f"   Features semânticas: {metadata_tags.get('num_semantic_features', 'N/A')}")
+            
+        except Exception as e:
+            print(f"⚠️  Não foi possível ler metadados TAGs: {e}")
     
     return all_ok
 
