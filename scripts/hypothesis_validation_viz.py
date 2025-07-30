@@ -25,8 +25,17 @@ COLORS = {
 
 def load_data():
     """Carrega dados necessários"""
+    import os
+    
     df = pd.read_csv('datasets/processed/pheme_processed_cascades.csv')
-    with open('pheme_real_cascades_results.json', 'r') as f:
+    
+    # Carrega resultados da pasta results
+    results_path = 'results/pheme_real_cascades_results.json'
+    if not os.path.exists(results_path):
+        # Tenta na raiz se não encontrar em results (compatibilidade)
+        results_path = 'pheme_real_cascades_results.json'
+    
+    with open(results_path, 'r') as f:
         results = json.load(f)
     return df, results
 

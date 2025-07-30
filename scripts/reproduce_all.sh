@@ -60,12 +60,17 @@ echo
 echo "=============================================="
 echo "ETAPA 1: Processamento do Dataset PHEME"
 echo "=============================================="
-echo "Extraindo características filogenéticas das cascatas..."
-echo
 
-STEP_START=$(date +%s)
-python scripts/process_pheme.py
-show_elapsed_time $STEP_START
+# Verifica se precisa processar ou se já está pronto
+if [ -f "datasets/processed/pheme_processed_cascades.csv" ]; then
+    echo "✅ Dataset já processado, pulando esta etapa..."
+else
+    echo "Extraindo características filogenéticas das cascatas..."
+    echo
+    STEP_START=$(date +%s)
+    python scripts/process_pheme.py
+    show_elapsed_time $STEP_START
+fi
 
 echo
 echo "=============================================="

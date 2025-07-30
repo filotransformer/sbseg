@@ -24,7 +24,7 @@ Parâmetros opcionais:
 
 Saída:
     - Resultados detalhados no console
-    - Arquivo JSON com todas as métricas: pheme_real_cascades_results.json
+    - Arquivo JSON com todas as métricas: results/pheme_real_cascades_results.json
 """
 
 import pandas as pd
@@ -562,10 +562,13 @@ def main():
         }
     }
     
-    with open('pheme_real_cascades_results.json', 'w') as f:
+    # Salva resultados na pasta results
+    os.makedirs('results', exist_ok=True)
+    results_path = 'results/pheme_real_cascades_results.json'
+    with open(results_path, 'w') as f:
         json.dump(results, f, indent=2)
     
-    print("\nResultados salvos em pheme_real_cascades_results.json")
+    print(f"\nResultados salvos em {results_path}")
 
 if __name__ == "__main__":
     main()
