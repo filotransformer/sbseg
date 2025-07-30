@@ -25,7 +25,7 @@ COLORS = {
 
 def load_data():
     """Carrega dados necessários"""
-    df = pd.read_csv('/home/acauan/ufam/papers/01_sbseg_filo_trans/datasets/processed/pheme_processed_cascades.csv')
+    df = pd.read_csv('datasets/processed/pheme_processed_cascades.csv')
     with open('pheme_real_cascades_results.json', 'r') as f:
         results = json.load(f)
     return df, results

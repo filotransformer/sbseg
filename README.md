@@ -46,7 +46,7 @@ Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **
 ## Estrutura do Repositório
 
 ```
-01_sbseg_filo_trans/
+sbseg/
 ├── datasets/                  # Dados processados do PHEME
 │   └── processed/            # Dados processados (baixados automaticamente)
 ├── scripts/                  # Scripts principais
@@ -55,7 +55,6 @@ Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **
 │   ├── pheme_real_cascades_experiment.py  # Experimento principal
 │   ├── hypothesis_validation_viz.py       # Validação de hipóteses
 │   └── reproduce_all.sh      # Script de reprodução automática
-├── paper/                    # Artigo e visualizações
 ├── visualizations/           # Resultados visuais
 ├── requirements.txt          # Dependências Python
 ├── README.md                 # Este arquivo
@@ -95,11 +94,9 @@ Este artefato não apresenta riscos de segurança aos avaliadores. O código:
 ## 1. Clonar o Repositório
 
 ```bash
-git clone https://github.com/seu-usuario/filo-transformer-sbseg25.git
-cd filo-transformer-sbseg25
+git clone https://github.com/filotransformer/sbseg.git
+cd sbseg
 ```
-
-**Nota**: Substitua `seu-usuario` pelo nome de usuário correto do GitHub.
 
 ## 2. Criar Ambiente Virtual
 

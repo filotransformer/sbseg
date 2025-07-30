@@ -115,6 +115,7 @@ Em caso de dúvidas durante a avaliação, os autores estão disponíveis atrav�
 
 ## 7. Checklist para Revisores
 
+- [ ] Repositório clonado: `git clone https://github.com/filotransformer/sbseg.git`
 - [ ] Ambiente virtual criado e ativado
 - [ ] Dependências instaladas via requirements.txt
 - [ ] Teste mínimo executado com sucesso

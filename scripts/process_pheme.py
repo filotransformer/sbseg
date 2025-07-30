@@ -213,7 +213,7 @@ class PHEMEProcessor:
 
 def main():
     # Caminho base da dataset PHEME
-    base_path = "/home/acauan/ufam/papers/01_sbseg_filo_trans/datasets/pheme-rnr-dataset"
+    base_path = "datasets/pheme-rnr-dataset"
     
     processor = PHEMEProcessor(base_path)
     
@@ -221,7 +221,7 @@ def main():
     df = processor.process_all_events()
     
     # Salva dataset processado
-    output_path = "/home/acauan/ufam/papers/01_sbseg_filo_trans/datasets/processed"
+    output_path = "datasets/processed"
     os.makedirs(output_path, exist_ok=True)
     
     # CSV principal

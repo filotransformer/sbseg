@@ -237,7 +237,7 @@ def load_pheme_data():
             - phylo_features: Array com features de cascata [n_samples, n_phylo_features]
             - labels: Array com labels binários [n_samples]
     """
-    base_path = Path("/home/acauan/ufam/papers/01_sbseg_filo_trans/datasets/processed")
+    base_path = Path("datasets/processed")
     
     # Carrega dataset principal
     df = pd.read_csv(base_path / "pheme_processed_cascades.csv")
