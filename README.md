@@ -26,9 +26,35 @@ Este documento está organizado nas seguintes seções:
 
 Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **Sustentáveis (SeloS)** e **Experimentos Reprodutíveis (SeloR)**.
 
-**Nota**: Um documento de apêndice (`APENDICE.md`) está disponível com informações complementares para os revisores, incluindo detalhes de desempenho, troubleshooting e checklist de avaliação.
+**Documentação Adicional**:
+- 📘 [`SETUP_WSL.md`](SETUP_WSL.md) - Guia detalhado para configuração no Windows
+- 📄 [`APENDICE.md`](APENDICE.md) - Informações complementares para revisores
+- 📚 [`DOCUMENTATION.md`](DOCUMENTATION.md) - Documentação técnica do código
 
 # Informações básicas
+
+## ⚠️ Sistemas Operacionais Suportados
+
+### Linux/macOS (Recomendado)
+O projeto foi desenvolvido e testado em ambientes Linux/macOS. Siga as instruções normalmente.
+
+### Windows
+Para executar no Windows, é **NECESSÁRIO** usar o WSL (Windows Subsystem for Linux):
+
+1. **Instale o WSL2 com Ubuntu 24.04**:
+   ```powershell
+   wsl --install -d Ubuntu-24.04
+   ```
+
+2. **Dentro do WSL, instale os pacotes necessários**:
+   ```bash
+   sudo apt update
+   sudo apt install python3 python3-pip python3-venv git build-essential
+   ```
+
+3. **Continue com as instruções de instalação abaixo dentro do WSL**
+
+📘 **Guia detalhado para Windows**: Veja o arquivo [`SETUP_WSL.md`](SETUP_WSL.md) para instruções passo a passo completas.
 
 ## Ambiente de Execução
 
@@ -39,7 +65,7 @@ Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **
 - **GPU**: Opcional (o código funciona em CPU)
 
 ### Software Necessário
-- **Sistema Operacional**: Linux (Ubuntu 20.04+) ou macOS
+- **Sistema Operacional**: Linux (Ubuntu 20.04+), macOS ou Windows com WSL2
 - **Python**: 3.8 ou superior
 - **Git**: Para clonar o repositório
 
@@ -96,6 +122,8 @@ Este artefato não apresenta riscos de segurança aos avaliadores. O código:
 
 # Instalação
 
+> **Nota para usuários Windows**: Execute todos os comandos abaixo dentro do WSL2/Ubuntu
+
 ## 1. Clonar o Repositório
 
 ```bash
@@ -107,9 +135,7 @@ cd sbseg
 
 ```bash
 python3 -m venv venv
-source venv/bin/activate  # No Linux/macOS
-# ou
-venv\Scripts\activate  # No Windows
+source venv/bin/activate  # Linux/macOS/WSL
 ```
 
 ## 3. Instalar Dependências
