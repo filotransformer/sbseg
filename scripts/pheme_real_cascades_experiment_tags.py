@@ -245,6 +245,10 @@ def load_pheme_tags_data():
     # Carrega embeddings semânticos
     embeddings_df = pd.read_pickle(tags_pkl)
     
+    # Converte source_tweet_id para o mesmo tipo em ambos os dataframes
+    df['source_tweet_id'] = df['source_tweet_id'].astype(str)
+    embeddings_df['source_tweet_id'] = embeddings_df['source_tweet_id'].astype(str)
+    
     # Merge
     df = df.merge(embeddings_df, on='source_tweet_id')
     
