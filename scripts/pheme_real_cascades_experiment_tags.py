@@ -204,8 +204,8 @@ class FiloTransformerTAGs(nn.Module):
         
         # Update analysis weights
         with torch.no_grad():
-            self.semantic_weight.data = gate.mean().item()
-            self.phylo_weight.data = 1 - gate.mean().item()
+            self.semantic_weight.data = torch.tensor(gate.mean().item())
+            self.phylo_weight.data = torch.tensor(1 - gate.mean().item())
         
         # Prepare tokens
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)

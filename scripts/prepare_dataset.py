@@ -124,7 +124,7 @@ def run_processing_script() -> bool:
     """
     try:
         print("\n🔄 Iniciando processamento dos dados PHEME...")
-        print("   Este processo pode levar alguns minutos...")
+        print("   Este processo pode levar cerca de 10 minutos (dependendo do seu hardware)...")
         
         # Primeiro executa o processamento básico
         print("\n📊 ETAPA 2.1: Processamento básico (12 features)...")

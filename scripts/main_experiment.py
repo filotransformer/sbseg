@@ -399,6 +399,20 @@ def run_main_experiment():
     print(f"  Peso médio filogenético: {avg_phylo:.1%}")
     print(f"  → O modelo aprendeu a priorizar features filogenéticas!")
     
+    # Helper function to convert numpy types to Python types
+    def convert_to_serializable(obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: convert_to_serializable(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_to_serializable(v) for v in obj]
+        return obj
+    
     # Save results
     results = {
         'experiment': 'Filo-Transformer Main Experiment',
@@ -423,6 +437,9 @@ def run_main_experiment():
         'fusion_weights': fusion_weights_history,
         'conclusion': 'Filo-Transformer supera baseline em todas as métricas'
     }
+    
+    # Convert all results to be JSON serializable
+    results = convert_to_serializable(results)
     
     os.makedirs('results', exist_ok=True)
     with open('results/main_experiment_results.json', 'w') as f:
