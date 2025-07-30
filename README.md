@@ -132,6 +132,17 @@ Este script irá:
 
 **Tempo estimado**: 2-5 minutos (dependendo da conexão)
 
+### Download Manual (se o automático falhar)
+
+Se o script de download automático falhar, você pode baixar manualmente:
+
+1. **Acesse**: https://drive.google.com/file/d/1efPvPpN8wHkaTs6Y8p5j9XkWwLfbgV-3/view?usp=sharing
+2. **Clique em "Baixar"** ou "Download"
+3. **Salve como**: `datasets/pheme_processed_data.tar.gz`
+4. **Execute novamente**: `python scripts/download_dataset.py`
+
+**Importante**: O arquivo deve ter ~205MB (não alguns KB)
+
 # Teste mínimo
 
 Execute o seguinte comando para verificar se a instalação foi bem-sucedida:

@@ -15,6 +15,7 @@ from tqdm import tqdm
 def download_file_from_google_drive(file_id: str, destination: str) -> bool:
     """
     Baixa um arquivo do Google Drive usando o file_id.
+    Lida corretamente com arquivos grandes que requerem confirmação.
     
     Args:
         file_id: ID do arquivo no Google Drive
@@ -24,10 +25,20 @@ def download_file_from_google_drive(file_id: str, destination: str) -> bool:
         bool: True se o download foi bem-sucedido, False caso contrário
     """
     
-    def get_confirm_token(response):
-        for key, value in response.cookies.items():
-            if key.startswith('download_warning'):
-                return value
+    def get_confirm_token(response_text):
+        """Extrai o token de confirmação da resposta HTML do Google Drive."""
+        import re
+        # Procura por padrões de confirmação na resposta HTML
+        patterns = [
+            r'name="confirm" value="([^"]+)"',
+            r'"downloadUrl":"([^"]+)"',
+            r'confirm=([^&]+)',
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, response_text)
+            if match:
+                return match.group(1)
         return None
 
     def save_response_content(response, destination):
@@ -42,26 +53,76 @@ def download_file_from_google_drive(file_id: str, destination: str) -> bool:
                             f.write(chunk)
                             pbar.update(len(chunk))
             else:
-                for chunk in response.iter_content(CHUNK_SIZE):
-                    if chunk:
-                        f.write(chunk)
+                # Para arquivos sem content-length, mostra progresso por chunks
+                downloaded = 0
+                with tqdm(unit='B', unit_scale=True, desc="Baixando") as pbar:
+                    for chunk in response.iter_content(CHUNK_SIZE):
+                        if chunk:
+                            f.write(chunk)
+                            downloaded += len(chunk)
+                            pbar.update(len(chunk))
 
-    URL = "https://docs.google.com/uc?export=download"
-    
     try:
         session = requests.Session()
-        response = session.get(URL, params={'id': file_id}, stream=True)
-        token = get_confirm_token(response)
-
-        if token:
-            params = {'id': file_id, 'confirm': token}
-            response = session.get(URL, params=params, stream=True)
-
+        
+        # Primeira tentativa: download direto
+        URL = f"https://drive.google.com/uc?export=download&id={file_id}"
+        response = session.get(URL, stream=True)
+        
+        # Verifica se é um arquivo pequeno (download direto)
+        content_type = response.headers.get('content-type', '')
+        if 'text/html' not in content_type:
+            print("📥 Download direto...")
+            save_response_content(response, destination)
+            return True
+        
+        # Para arquivos grandes, precisa lidar com a página de confirmação
+        print("📥 Arquivo grande detectado, processando confirmação...")
+        response_text = response.text
+        
+        # Tenta diferentes métodos para arquivos grandes
+        confirm_token = get_confirm_token(response_text)
+        
+        if confirm_token:
+            # Método 1: Usar token de confirmação
+            confirm_url = f"https://drive.google.com/uc?export=download&confirm={confirm_token}&id={file_id}"
+            response = session.get(confirm_url, stream=True)
+        else:
+            # Método 2: Usar parâmetros alternativos
+            alt_url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t"
+            response = session.get(alt_url, stream=True)
+        
+        # Verifica se agora temos o arquivo
+        content_type = response.headers.get('content-type', '')
+        if 'text/html' in content_type:
+            print("❌ Não foi possível contornar a proteção do Google Drive")
+            print("💡 Tente baixar manualmente e colocar em datasets/pheme_processed_data.tar.gz")
+            return False
+        
         save_response_content(response, destination)
         return True
         
     except Exception as e:
         print(f"❌ Erro durante o download: {e}")
+        return False
+
+def validate_tar_file(tar_path: str) -> bool:
+    """
+    Valida se o arquivo baixado é realmente um tar.gz válido.
+    
+    Args:
+        tar_path: Caminho para o arquivo tar.gz
+        
+    Returns:
+        bool: True se é um arquivo tar.gz válido, False caso contrário
+    """
+    try:
+        # Verifica se é um arquivo tar.gz válido
+        with tarfile.open(tar_path, "r:gz") as tar:
+            # Tenta listar o conteúdo sem extrair
+            tar.getnames()
+        return True
+    except Exception:
         return False
 
 def extract_tar_gz(tar_path: str, extract_to: str) -> bool:
@@ -76,6 +137,21 @@ def extract_tar_gz(tar_path: str, extract_to: str) -> bool:
         bool: True se a extração foi bem-sucedida, False caso contrário
     """
     try:
+        # Primeiro valida se é um arquivo tar.gz válido
+        if not validate_tar_file(tar_path):
+            print("❌ Arquivo baixado não é um tar.gz válido!")
+            print("💡 Provavelmente foi baixada uma página HTML do Google Drive")
+            
+            # Mostra o conteúdo do arquivo para debug
+            with open(tar_path, 'r', encoding='utf-8', errors='ignore') as f:
+                content = f.read(500)  # Primeiros 500 caracteres
+                if '<html' in content.lower() or '<!doctype' in content.lower():
+                    print("🔍 Confirmado: arquivo contém HTML em vez de dados binários")
+                    print("📄 Início do arquivo:")
+                    print(content[:200] + "...")
+            
+            return False
+        
         print("📦 Extraindo dados...")
         with tarfile.open(tar_path, "r:gz") as tar:
             tar.extractall(path=extract_to)
@@ -142,7 +218,15 @@ def main():
     
     # Faz o download
     if not download_file_from_google_drive(file_id, str(tar_path)):
-        print("❌ Falha no download!")
+        print("❌ Falha no download automático!")
+        print()
+        print("📋 INSTRUÇÕES PARA DOWNLOAD MANUAL:")
+        print("1. Acesse: https://drive.google.com/file/d/1efPvPpN8wHkaTs6Y8p5j9XkWwLfbgV-3/view?usp=sharing")
+        print("2. Clique em 'Baixar' ou 'Download'")
+        print("3. Salve o arquivo como: datasets/pheme_processed_data.tar.gz")
+        print("4. Execute este script novamente")
+        print()
+        print("💡 O arquivo deve ter aproximadamente 205MB")
         return 1
     
     print("✅ Download concluído!")
@@ -151,6 +235,13 @@ def main():
     # Extrai o arquivo
     if not extract_tar_gz(str(tar_path), str(datasets_dir)):
         print("❌ Falha na extração!")
+        print()
+        print("🔧 POSSÍVEIS SOLUÇÕES:")
+        print("1. O arquivo pode estar corrompido - tente baixar novamente")
+        print("2. Baixe manualmente do link:")
+        print("   https://drive.google.com/file/d/1efPvPpN8wHkaTs6Y8p5j9XkWwLfbgV-3/view?usp=sharing")
+        print("3. Certifique-se de que o arquivo tem ~205MB (não 2KB)")
+        print("4. Se o problema persistir, contate os autores")
         return 1
     
     print("✅ Extração concluída!")

@@ -95,8 +95,9 @@ config = {
 1. **Erro de memória**: Reduza batch_size ou use modo de teste
 2. **Dependências**: Use `pip install -r requirements.txt` (versões flexíveis)
 3. **Dataset não encontrado**: Execute `python scripts/download_dataset.py`
-4. **Falha no download**: Verifique conexão com internet ou tente novamente
-5. **Versões incompatíveis**: Use Python 3.8+ e pip atualizado
+4. **Falha no download**: Baixe manualmente do Google Drive (link no README)
+5. **Arquivo corrompido**: Verifique se tem 205MB, não alguns KB
+6. **Versões incompatíveis**: Use Python 3.8+ e pip atualizado
 
 ### 5.2 Modos de Execução Alternativos
 
