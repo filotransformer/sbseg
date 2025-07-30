@@ -66,20 +66,21 @@ sbseg/
 ## Bibliotecas Python Principais
 
 ```
-torch==2.0.1
-numpy==1.24.3
-pandas==2.0.3
-scikit-learn==1.3.0
-matplotlib==3.7.2
-seaborn==0.12.2
-plotly==5.16.1
-tqdm==4.66.1
-transformers==4.30.2
+torch>=2.2.0,<2.8.0
+numpy>=1.24.0,<2.0.0
+pandas>=2.0.0,<3.0.0
+scikit-learn>=1.3.0,<2.0.0
+matplotlib>=3.7.0,<4.0.0
+seaborn>=0.12.0,<1.0.0
+plotly>=5.16.0,<6.0.0
+tqdm>=4.66.0,<5.0.0
+transformers>=4.30.0,<5.0.0
+sentence-transformers>=2.2.0,<3.0.0
 ```
 
 ## Instalação das Dependências
 
-Todas as dependências estão especificadas no arquivo `requirements.txt` com suas versões exatas.
+Todas as dependências estão especificadas no arquivo `requirements.txt` com versões compatíveis e flexíveis.
 
 # Preocupações com segurança
 
