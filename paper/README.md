@@ -2,7 +2,7 @@
 
 Esta pasta contém materiais relacionados ao artigo científico:
 
-- **Artigo principal**: Filo-Transformer: Integrando Análise Filogenética e Transformers para Detecção de Fake News
+- **Artigo principal**: Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News (Artigo #10657)
 - **Visualizações**: Figuras e gráficos utilizados no artigo
 - **Materiais suplementares**: Análises adicionais e resultados detalhados
 

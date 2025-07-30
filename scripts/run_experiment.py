@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Filo-Transformer: Experimento principal para detecção de fake news.
+Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas 
+e Transformers para Identificação de Rumores e Fake News.
 
 Este script implementa o modelo Filo-Transformer que combina:
 1. Embeddings semânticos usando Sentence-BERT
@@ -642,7 +643,7 @@ class FiloTransformerExperiment:
 
 def main():
     """Função principal."""
-    parser = argparse.ArgumentParser(description='Filo-Transformer: Detecção de Fake News')
+    parser = argparse.ArgumentParser(description='Filo-Transformer: Identificação de Rumores e Fake News')
     parser.add_argument('--test', action='store_true', help='Modo de teste rápido')
     parser.add_argument('--use-openai', action='store_true', help='Usar embeddings OpenAI (requer API key)')
     parser.add_argument('--analyze-features', action='store_true', help='Analisar importância das características filogenéticas')
@@ -650,7 +651,7 @@ def main():
     args = parser.parse_args()
     
     print("="*60)
-    print("FILO-TRANSFORMER: DETECÇÃO DE FAKE NEWS")
+    print("FILO-TRANSFORMER: IDENTIFICAÇÃO DE RUMORES E FAKE NEWS")
     print("Artigo #10657 - SBSeg 2025")
     print("="*60)
     

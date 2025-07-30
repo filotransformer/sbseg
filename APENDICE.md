@@ -2,7 +2,7 @@
 
 ## Informações Complementares para Revisores
 
-Este documento complementa o README.md com informações adicionais para facilitar o processo de avaliação do artefato Filo-Transformer.
+Este documento complementa o README.md com informações adicionais para facilitar o processo de avaliação do artefato "Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News" (Artigo #10657).
 
 ## 1. Recursos Específicos
 

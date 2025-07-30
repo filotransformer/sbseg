@@ -1,8 +1,10 @@
-# Filo-Transformer: Detecção de Fake News Integrando Análise Filogenética e Transformers
+# Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News
 
 Este artefato apresenta a implementação do modelo Filo-Transformer, uma abordagem inovadora para detecção de fake news que combina análise filogenética textual com a arquitetura Feature Tokenizer Transformer (FT-Transformer). O modelo utiliza tanto características semânticas quanto estruturais das cascatas de propagação de informação em redes sociais para identificar conteúdo falso com maior precisão.
 
-**Título do Artigo**: Filo-Transformer: Integrando Análise Filogenética e Transformers para Detecção de Fake News
+**Título do Artigo**: Filo-Transformer: Um modelo baseado em Grafo de Alinhamento de Árvores Filogenéticas e Transformers para Identificação de Rumores e Fake News
+
+**Artigo #10657** - SBSeg 2025
 
 **Resumo do Artigo**: Este trabalho propõe o Filo-Transformer, um modelo inovador que integra análise filogenética textual com a arquitetura FT-Transformer para detecção de fake news. Através da construção de Grafos de Alinhamento de Árvores (TAGs) e extração de características filogenéticas das cascatas de propagação, o modelo aprende automaticamente a importância relativa entre features semânticas e estruturais. Experimentos no dataset PHEME demonstram melhorias significativas, com AUC de 0.9071 comparado a 0.8882 do baseline, validando a importância das características filogenéticas.
 
