@@ -53,7 +53,7 @@ START_TIME=$(date +%s)
 
 echo "📁 Criando diretórios necessários..."
 mkdir -p datasets/processed
-mkdir -p visualizations/hypothesis_validation
+mkdir -p visualizations/hypothesis
 mkdir -p results
 
 echo
@@ -80,7 +80,14 @@ echo "Comparando Baseline vs Filo-Transformer..."
 echo
 
 STEP_START=$(date +%s)
-python scripts/pheme_real_cascades_experiment.py --seed 42 --folds 5 | tee results/main_experiment.log
+# Verifica se existe dataset com TAGs
+if [ -f "datasets/processed/pheme_processed_cascades_tags.csv" ]; then
+    echo "Usando dataset com TAGs (70 features filogenéticas)..."
+    python scripts/pheme_real_cascades_experiment_tags.py --seed 42 --folds 5 | tee results/main_experiment.log
+else
+    echo "Usando dataset básico (12 features)..."
+    python scripts/pheme_real_cascades_experiment.py --seed 42 --folds 5 | tee results/main_experiment.log
+fi
 show_elapsed_time $STEP_START
 
 echo
@@ -91,7 +98,12 @@ echo "Analisando pesos aprendidos automaticamente..."
 echo
 
 STEP_START=$(date +%s)
-python scripts/pheme_real_cascades_experiment.py --analyze-weights | tee results/fusion_weights.log
+# Usa o script apropriado baseado no dataset
+if [ -f "datasets/processed/pheme_processed_cascades_tags.csv" ]; then
+    python scripts/pheme_real_cascades_experiment_tags.py --analyze-weights | tee results/fusion_weights.log
+else
+    python scripts/pheme_real_cascades_experiment.py --analyze-weights | tee results/fusion_weights.log
+fi
 show_elapsed_time $STEP_START
 
 echo
@@ -134,7 +146,7 @@ echo "  - datasets/processed/pheme_cascades_with_features.csv"
 echo "  - results/main_experiment.log"
 echo "  - results/fusion_weights.log"
 echo "  - results/hypothesis_validation.log"
-echo "  - visualizations/hypothesis_validation/*.html"
+echo "  - visualizations/hypothesis/*.html"
 
 echo
 echo "🎉 Todos os experimentos foram reproduzidos com sucesso!"

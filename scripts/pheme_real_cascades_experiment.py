@@ -48,15 +48,15 @@ SEED = 42
 np.random.seed(SEED)
 torch.manual_seed(SEED)
 
-# Hyperparâmetros otimizados
+# Hyperparâmetros otimizados para estabilidade
 BATCH_SIZE = 32
-LEARNING_RATE = 5e-4
+LEARNING_RATE = 1e-4  # Reduzido para estabilidade
 NUM_EPOCHS = 100
-D_MODEL = 256
-N_HEADS = 8
-N_LAYERS = 4
-DROPOUT = 0.1
-PATIENCE = 15
+D_MODEL = 128  # Reduzido para evitar overfitting
+N_HEADS = 4   # Reduzido proporcionalmente
+N_LAYERS = 2  # Reduzido drasticamente
+DROPOUT = 0.3 # Aumentado para regularização
+PATIENCE = 20 # Mais paciência
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 print(f"Dispositivo: {DEVICE}")
@@ -164,9 +164,15 @@ class FiloTransformer(nn.Module):
         # CLS token
         self.cls_token = nn.Parameter(torch.randn(1, 1, d_model))
         
-        # Pesos aprendíveis para fusão (inicializa phylo com peso 2x)
-        self.semantic_weight = nn.Parameter(torch.tensor(1.0))
-        self.phylo_weight = nn.Parameter(torch.tensor(2.0))
+        # Fusão aditiva mais estável (sem competição)
+        self.fusion_gate = nn.Sequential(
+            nn.Linear(d_model * 2, d_model),
+            nn.Sigmoid()
+        )
+        
+        # Pesos para análise (não usados no forward)
+        self.semantic_weight = nn.Parameter(torch.tensor(0.5))
+        self.phylo_weight = nn.Parameter(torch.tensor(0.5))
         
         # Transformer encoder
         encoder_layer = nn.TransformerEncoderLayer(
@@ -179,13 +185,17 @@ class FiloTransformer(nn.Module):
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=n_layers)
         
-        # Classificador
+        # Classificador mais robusto com regularização forte
         self.classifier = nn.Sequential(
             nn.LayerNorm(d_model),
+            nn.Dropout(dropout),
             nn.Linear(d_model, d_model // 2),
             nn.GELU(),
+            nn.Dropout(dropout * 1.5),  # Dropout mais forte
+            nn.Linear(d_model // 2, d_model // 4),
+            nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(d_model // 2, num_classes)
+            nn.Linear(d_model // 4, num_classes)
         )
         
     def forward(self, semantic_features, phylo_features):
@@ -205,16 +215,25 @@ class FiloTransformer(nn.Module):
         semantic_tokens = self.semantic_embedder(semantic_features.unsqueeze(1))
         phylo_tokens = self.phylo_embedder(phylo_features.unsqueeze(1))
         
-        # Aplica pesos e normaliza
-        weights = torch.softmax(torch.stack([self.semantic_weight, self.phylo_weight]), dim=0)
-        semantic_tokens = semantic_tokens * weights[0]
-        phylo_tokens = phylo_tokens * weights[1]
+        # Fusão inteligente via gate mechanism
+        combined_features = torch.cat([semantic_tokens.squeeze(1), phylo_tokens.squeeze(1)], dim=1)
+        fusion_weights = self.fusion_gate(combined_features)
+        
+        # Fusão aditiva balanceada
+        fused_tokens = (semantic_tokens.squeeze(1) * fusion_weights + 
+                       phylo_tokens.squeeze(1) * (1 - fusion_weights)).unsqueeze(1)
+        
+        # Atualiza pesos para análise
+        with torch.no_grad():
+            avg_gate = fusion_weights.mean().item()
+            self.semantic_weight.data = torch.tensor(avg_gate)
+            self.phylo_weight.data = torch.tensor(1 - avg_gate)
         
         # CLS token
         cls_tokens = self.cls_token.expand(batch_size, -1, -1)
         
-        # Concatena todos os tokens
-        tokens = torch.cat([cls_tokens, semantic_tokens, phylo_tokens], dim=1)
+        # Concatena CLS + fused tokens
+        tokens = torch.cat([cls_tokens, fused_tokens], dim=1)
         
         # Transformer encoding
         output = self.transformer(tokens)
@@ -273,7 +292,7 @@ def prepare_features(df, cascade_features, sentence_model):
 def train_model(model, train_loader, val_loader, num_epochs=NUM_EPOCHS, patience=PATIENCE):
     """Treina o modelo com early stopping"""
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)
+    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=0.01)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=5, factor=0.5)
     
     best_val_loss = float('inf')
@@ -300,6 +319,8 @@ def train_model(model, train_loader, val_loader, num_epochs=NUM_EPOCHS, patience
             
             optimizer.zero_grad()
             loss.backward()
+            # Gradient clipping para estabilidade
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             
             train_loss += loss.item()

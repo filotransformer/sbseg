@@ -24,19 +24,41 @@ COLORS = {
 }
 
 def load_data():
-    """Carrega dados necessários"""
+    """Carrega dados necessários - suporta tanto dataset antigo quanto TAGs"""
     import os
     
-    df = pd.read_csv('datasets/processed/pheme_processed_cascades.csv')
+    # Tenta carregar dataset com TAGs primeiro
+    tags_path = 'datasets/processed/pheme_processed_cascades_tags.csv'
+    old_path = 'datasets/processed/pheme_processed_cascades.csv'
     
-    # Carrega resultados da pasta results
-    results_path = 'results/pheme_real_cascades_results.json'
-    if not os.path.exists(results_path):
-        # Tenta na raiz se não encontrar em results (compatibilidade)
-        results_path = 'pheme_real_cascades_results.json'
+    if os.path.exists(tags_path):
+        df = pd.read_csv(tags_path)
+        print("Usando dataset com TAGs (70 features filogenéticas)")
+    elif os.path.exists(old_path):
+        df = pd.read_csv(old_path)
+        print("Usando dataset antigo (12 features básicas)")
+    else:
+        raise FileNotFoundError("Nenhum dataset encontrado!")
     
-    with open(results_path, 'r') as f:
-        results = json.load(f)
+    # Carrega resultados - tenta TAGs primeiro
+    results_paths = [
+        'results/pheme_real_cascades_tags_results.json',
+        'results/pheme_tags_results.json',
+        'results/pheme_real_cascades_results.json',
+        'pheme_real_cascades_results.json'
+    ]
+    
+    results = None
+    for path in results_paths:
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                results = json.load(f)
+            print(f"Usando resultados de: {path}")
+            break
+    
+    if results is None:
+        raise FileNotFoundError("Nenhum arquivo de resultados encontrado!")
+    
     return df, results
 
 def validate_hypothesis_2_1():
@@ -564,6 +586,10 @@ def create_hypothesis_summary_dashboard():
 def main():
     """Executa todas as validações"""
     print("Iniciando validação das hipóteses...")
+    
+    # Criar diretórios necessários
+    import os
+    os.makedirs('visualizations/hypothesis', exist_ok=True)
     
     print("\n1. Validando Hipótese 2.1 (Terminal Leaves)...")
     validate_hypothesis_2_1()
