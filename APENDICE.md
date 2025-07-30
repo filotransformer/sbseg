@@ -51,9 +51,9 @@ scripts/
 │   └── Classes: FTTransformer, FusionFTTransformer
 ├── tag_construction.py        # Construção de TAGs (Tree Alignment Graphs)
 │   └── Funções: build_tag(), extract_phylogenetic_features()
-├── pheme_dataset_processor.py # Processamento do dataset PHEME
-│   └── Classes: PHEMEProcessor, CascadeExtractor
-└── run_experiment.py          # Orquestrador principal dos experimentos
+├── process_pheme.py          # Processamento do dataset PHEME
+│   └── Funções: process_cascades(), extract_features()
+└── pheme_real_cascades_experiment.py # Experimento principal
     └── Funções: main(), train_model(), evaluate()
 ```
 
