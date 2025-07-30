@@ -13,7 +13,7 @@ O projeto foi desenvolvido e testado nos seguintes ambientes:
 - **Requisito mínimo**: 8GB RAM, CPU com 4 cores
 
 ### 1.2 Dataset
-Os dados processados do PHEME são baixados automaticamente via Google Drive (205MB compactado, 4.3GB descompactado). O script `download_dataset.py` gerencia todo o processo automaticamente. Não são necessárias chaves de acesso ou credenciais especiais.
+O dataset PHEME já está incluído no repositório em formato compactado (25.5MB). O script `prepare_dataset.py` gerencia todo o processo de preparação automaticamente. Não são necessárias chaves de acesso ou credenciais especiais.
 
 ### 1.3 Recursos Externos
 **Nenhum recurso externo é necessário**. O artefato:
@@ -28,7 +28,7 @@ Os dados processados do PHEME são baixados automaticamente via Google Drive (20
 
 | Experimento | Amostras | CPU (4 cores) | GPU (opcional) |
 |-------------|----------|---------------|----------------|
-| Download dataset | - | 2-5 minutos | 2-5 minutos |
+| Preparação dataset | - | 5-10 minutos | 5-10 minutos |
 | Teste mínimo | 200 | ~30 segundos | ~20 segundos |
 | Reivindicação #1 | 5,802 | 10-15 minutos | 8-10 minutos |
 | Reivindicação #2 | 5,802 | 1-2 horas | 45-60 minutos |
@@ -94,9 +94,9 @@ config = {
 
 1. **Erro de memória**: Reduza batch_size ou use modo de teste
 2. **Dependências**: Use `pip install -r requirements.txt` (versões flexíveis)
-3. **Dataset não encontrado**: Execute `python scripts/download_dataset.py`
-4. **Falha no download**: Baixe manualmente do Google Drive (link no README)
-5. **Arquivo corrompido**: Verifique se tem 205MB, não alguns KB
+3. **Dataset não encontrado**: Execute `python scripts/prepare_dataset.py`
+4. **Arquivo tar.bz2 não encontrado**: Verifique se phemernrdataset.tar.bz2 está em datasets/
+5. **Falha na extração**: Verifique se o arquivo tem 25.5MB
 6. **Versões incompatíveis**: Use Python 3.8+ e pip atualizado
 
 ### 5.2 Modos de Execução Alternativos

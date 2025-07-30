@@ -46,7 +46,7 @@ Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **
 ## Estrutura do Repositório
 
 ```
-01_sbseg_filo_trans/
+sbseg/
 ├── datasets/                  # Dados do PHEME
 │   ├── phemernrdataset.tar.bz2  # Arquivo compactado original
 │   └── processed/            # Dados processados (gerados automaticamente)
@@ -99,8 +99,8 @@ Este artefato não apresenta riscos de segurança aos avaliadores. O código:
 ## 1. Clonar o Repositório
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
-cd 01_sbseg_filo_trans
+git clone https://github.com/filotransformer/sbseg.git
+cd sbseg
 ```
 
 ## 2. Criar Ambiente Virtual
