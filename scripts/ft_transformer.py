@@ -82,7 +82,10 @@ class FTTransformer(nn.Module):
             nn.Linear(d_model, d_model // 2),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(d_model // 2, 1)
+            nn.Linear(d_model // 2, d_model // 4),
+            nn.GELU(), 
+            nn.Dropout(dropout / 2),
+            nn.Linear(d_model // 4, 1)
         )
         
         # Inicialização
@@ -94,7 +97,14 @@ class FTTransformer(nn.Module):
             if isinstance(module, nn.Linear):
                 nn.init.xavier_uniform_(module.weight)
                 if module.bias is not None:
-                    nn.init.zeros_(module.bias)
+                    nn.init.zeros_(module.bias) 
+            elif isinstance(module, nn.LayerNorm):
+                nn.init.ones_(module.weight)
+                nn.init.zeros_(module.bias)
+        
+        # Inicialização especial para CLS token e positional encoding
+        nn.init.normal_(self.cls_token, std=0.02)
+        nn.init.normal_(self.positional_encoding, std=0.02)
     
     def forward(self, semantic_features: torch.Tensor, 
                 phylogenetic_features: torch.Tensor) -> torch.Tensor:
@@ -122,10 +132,11 @@ class FTTransformer(nn.Module):
         tokens.append(semantic_token)
         
         # Tokens filogenéticos (um token por característica)
-        for i in range(self.n_phylogenetic_features):
-            feature = phylogenetic_features[:, i:i+1]
-            token = self.phylogenetic_tokenizers[i](feature).unsqueeze(1)
-            tokens.append(token)
+        if self.n_phylogenetic_features > 0:
+            for i in range(self.n_phylogenetic_features):
+                feature = phylogenetic_features[:, i:i+1] 
+                token = self.phylogenetic_tokenizers[i](feature).unsqueeze(1)
+                tokens.append(token)
         
         # Concatenar todos os tokens
         x = torch.cat(tokens, dim=1)  # (batch_size, n_tokens, d_model)
@@ -234,8 +245,23 @@ class FTTransformerClassifier:
             dropout=self.dropout
         ).to(self.device)
         
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.learning_rate)
-        criterion = nn.BCEWithLogitsLoss()
+        self.optimizer = torch.optim.AdamW(
+            self.model.parameters(), 
+            lr=self.learning_rate, 
+            weight_decay=0.01,
+            eps=1e-8
+        )
+        
+        # Scheduler para reduzir learning rate
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            self.optimizer, mode='min', factor=0.5, patience=5
+        )
+        
+        # Calcular class weights baseado na distribuição real
+        pos_count = np.sum(y)
+        neg_count = len(y) - pos_count
+        pos_weight = torch.tensor([neg_count / pos_count]).to(self.device) if pos_count > 0 else torch.tensor([1.0]).to(self.device)
+        criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
         
         # Preparar dados
         X_sem_tensor, X_phylo_tensor, y_tensor = self._prepare_data(X_semantic, X_phylo, y)
@@ -284,6 +310,9 @@ class FTTransformerClassifier:
                     val_outputs = self.model(X_val_sem_tensor, X_val_phylo_tensor)
                     val_loss = criterion(val_outputs, y_val_tensor).item()
                 
+                # Scheduler step
+                scheduler.step(val_loss)
+                
                 # Early stopping
                 if val_loss < best_val_loss:
                     best_val_loss = val_loss
@@ -326,12 +355,23 @@ class FTTransformerClassifier:
         proba_negative = 1 - proba_positive
         return np.hstack([proba_negative, proba_positive])
     
-    def predict(self, X_semantic: np.ndarray, X_phylo: np.ndarray) -> np.ndarray:
+    def predict(self, X_semantic: np.ndarray, X_phylo: np.ndarray, threshold: float = 0.5) -> np.ndarray:
         """
         Prediz classes.
+        
+        Args:
+            X_semantic: Embeddings semânticos
+            X_phylo: Características filogenéticas  
+            threshold: Limiar de decisão (default 0.5)
         
         Returns:
             Array com predições binárias (0 ou 1)
         """
-        proba = self.predict_proba(X_semantic, X_phylo)
-        return (proba[:, 1] >= 0.5).astype(int)
+        self.model.eval()
+        X_sem_tensor, X_phylo_tensor, _ = self._prepare_data(X_semantic, X_phylo)
+        
+        with torch.no_grad():
+            logits = self.model(X_sem_tensor, X_phylo_tensor)
+            proba = torch.sigmoid(logits).cpu().numpy().flatten()
+        
+        return (proba >= threshold).astype(int)

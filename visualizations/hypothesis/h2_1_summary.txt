@@ -1,0 +1,14 @@
+HYPOTHESIS 2.1 VALIDATION RESULTS
+==================================================
+
+Statement: Fake news tend to appear as terminal leaves in phylogenetic trees
+
+Statistical Tests:
+- Cascade Depth: p-value = 6.790e-05 ✓ SIGNIFICANT
+- Branching Factor: p-value = 9.520e-02 ✗ NOT SIGNIFICANT
+
+Mean Values:
+- Rumour avg depth: 1.82
+- Non-rumour avg depth: 1.94
+- Rumour avg branching: 0.80
+- Non-rumour avg branching: 0.79
