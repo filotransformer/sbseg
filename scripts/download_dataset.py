@@ -180,7 +180,7 @@ if __name__ == "__main__":
     # Adiciona requirements necessários
     try:
         import requests
-        import tqdm
+        from tqdm import tqdm
     except ImportError:
         print("❌ Dependências não encontradas!")
         print("Execute: pip install requests tqdm")

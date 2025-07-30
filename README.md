@@ -117,18 +117,20 @@ pip install -r requirements.txt
 
 ## 4. Baixar Dataset Processado
 
-Os dados processados do PHEME estão hospedados no Google Drive devido ao tamanho (4.3GB). Execute o script de download:
+Os dados processados do PHEME estão hospedados no Google Drive devido ao tamanho (4.3GB descompactado). Execute o script de download:
 
 ```bash
 python scripts/download_dataset.py
 ```
 
 Este script irá:
-- Baixar automaticamente os dados processados (compactados em ~200MB)
-- Descompactar na pasta `datasets/processed/`
+- Baixar automaticamente os dados processados (205MB compactado)
+- Descompactar na pasta `datasets/processed/` (4.3GB)
 - Remover o arquivo compactado para economizar espaço
 
 **Nota**: O download é feito apenas uma vez. Se os dados já estiverem presentes, o script detecta e pula o download.
+
+**Tempo estimado**: 2-5 minutos (dependendo da conexão)
 
 # Teste mínimo
 

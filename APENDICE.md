@@ -13,7 +13,7 @@ O projeto foi desenvolvido e testado nos seguintes ambientes:
 - **Requisito mínimo**: 8GB RAM, CPU com 4 cores
 
 ### 1.2 Dataset
-Os dados processados do PHEME são baixados automaticamente via Google Drive (~200MB compactado, 4.3GB descompactado). O script `download_dataset.py` gerencia todo o processo automaticamente. Não são necessárias chaves de acesso ou credenciais especiais.
+Os dados processados do PHEME são baixados automaticamente via Google Drive (205MB compactado, 4.3GB descompactado). O script `download_dataset.py` gerencia todo o processo automaticamente. Não são necessárias chaves de acesso ou credenciais especiais.
 
 ### 1.3 Recursos Externos
 **Nenhum recurso externo é necessário**. O artefato:
@@ -28,6 +28,7 @@ Os dados processados do PHEME são baixados automaticamente via Google Drive (~2
 
 | Experimento | Amostras | CPU (4 cores) | GPU (opcional) |
 |-------------|----------|---------------|----------------|
+| Download dataset | - | 2-5 minutos | 2-5 minutos |
 | Teste mínimo | 200 | ~30 segundos | ~20 segundos |
 | Reivindicação #1 | 5,802 | 10-15 minutos | 8-10 minutos |
 | Reivindicação #2 | 5,802 | 1-2 horas | 45-60 minutos |
