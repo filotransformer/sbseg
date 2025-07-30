@@ -24,13 +24,13 @@ if [[ "$VIRTUAL_ENV" == "" ]]; then
     exit 1
 fi
 
-# Baixa dados processados se necessário
+# Prepara dados se necessário
 echo "📥 Verificando dados processados..."
 if [ ! -d "datasets/processed" ] || [ ! -f "datasets/processed/pheme_processed_cascades.csv" ]; then
-    echo "Dados não encontrados. Baixando automaticamente..."
-    python scripts/download_dataset.py
+    echo "Dados não encontrados. Preparando automaticamente..."
+    python scripts/prepare_dataset.py
     if [ $? -ne 0 ]; then
-        echo "❌ Erro: Falha no download dos dados!"
+        echo "❌ Erro: Falha na preparação dos dados!"
         exit 1
     fi
 else

@@ -46,18 +46,22 @@ Os selos considerados são: **Disponíveis (SeloD)**, **Funcionais (SeloF)**, **
 ## Estrutura do Repositório
 
 ```
-sbseg/
-├── datasets/                  # Dados processados do PHEME
-│   └── processed/            # Dados processados (baixados automaticamente)
+01_sbseg_filo_trans/
+├── datasets/                  # Dados do PHEME
+│   ├── phemernrdataset.tar.bz2  # Arquivo compactado original
+│   └── processed/            # Dados processados (gerados automaticamente)
 ├── scripts/                  # Scripts principais
-│   ├── download_dataset.py   # Download automático dos dados
+│   ├── prepare_dataset.py    # Preparação automática dos dados
 │   ├── process_pheme.py      # Processamento do dataset
 │   ├── pheme_real_cascades_experiment.py  # Experimento principal
 │   ├── hypothesis_validation_viz.py       # Validação de hipóteses
+│   ├── quick_test.py         # Teste mínimo de instalação
 │   └── reproduce_all.sh      # Script de reprodução automática
 ├── visualizations/           # Resultados visuais
+├── results/                  # Resultados dos experimentos
 ├── requirements.txt          # Dependências Python
 ├── README.md                 # Este arquivo
+├── APENDICE.md              # Informações complementares
 └── LICENSE                   # Licença MIT
 ```
 
@@ -95,8 +99,8 @@ Este artefato não apresenta riscos de segurança aos avaliadores. O código:
 ## 1. Clonar o Repositório
 
 ```bash
-git clone https://github.com/filotransformer/sbseg.git
-cd sbseg
+git clone <URL_DO_REPOSITORIO>
+cd 01_sbseg_filo_trans
 ```
 
 ## 2. Criar Ambiente Virtual
@@ -115,33 +119,28 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## 4. Baixar Dataset Processado
+## 4. Preparar Dataset
 
-Os dados processados do PHEME estão hospedados no Google Drive devido ao tamanho (4.3GB descompactado). Execute o script de download:
+O dataset PHEME já está incluído no repositório em formato compactado. Execute o script de preparação:
 
 ```bash
-python scripts/download_dataset.py
+python scripts/prepare_dataset.py
 ```
 
 Este script irá:
-- Baixar automaticamente os dados processados (205MB compactado)
-- Descompactar na pasta `datasets/processed/` (4.3GB)
-- Remover o arquivo compactado para economizar espaço
+- Descompactar o arquivo `phemernrdataset.tar.bz2` (25.5MB)
+- Extrair 103.213 arquivos do dataset PHEME
+- Processar e gerar os arquivos finais em `datasets/processed/`
+- Remover arquivos temporários para economizar espaço
 
-**Nota**: O download é feito apenas uma vez. Se os dados já estiverem presentes, o script detecta e pula o download.
+**Nota**: O processamento é feito apenas uma vez. Se os dados já estiverem processados, o script detecta e pula esta etapa.
 
-**Tempo estimado**: 2-5 minutos (dependendo da conexão)
+**Tempo estimado**: 5-10 minutos (extração + processamento)
 
-### Download Manual (se o automático falhar)
-
-Se o script de download automático falhar, você pode baixar manualmente:
-
-1. **Acesse**: https://drive.google.com/file/d/1efPvPpN8wHkaTs6Y8p5j9XkWwLfbgV-3/view?usp=sharing
-2. **Clique em "Baixar"** ou "Download"
-3. **Salve como**: `datasets/pheme_processed_data.tar.gz`
-4. **Execute novamente**: `python scripts/download_dataset.py`
-
-**Importante**: O arquivo deve ter ~205MB (não alguns KB)
+### Arquivos gerados:
+- `pheme_processed_cascades.csv` (32MB) - Dataset principal
+- `pheme_simplified.csv` (1MB) - Versão simplificada
+- `pheme_metadata.json` - Metadados do processamento
 
 # Teste mínimo
 
@@ -180,7 +179,18 @@ Para reproduzir todos os experimentos automaticamente:
 bash scripts/reproduce_all.sh
 ```
 
-Tempo total estimado: 2-3 horas (dependendo do hardware)
+Tempo total estimado: 10-15 minutos (com configurações de teste rápido)
+
+### Para reprodução completa (artigo):
+
+Para reproduzir exatamente os resultados do artigo com 30 epochs e 5 folds:
+
+```bash
+# Modifique scripts/pheme_real_cascades_experiment.py linha 45: num_epochs = 30
+python scripts/pheme_real_cascades_experiment.py --seed 42 --folds 5 --epochs 30
+```
+
+Tempo estimado: 2-3 horas
 
 ## Reivindicação #1: Processamento de Cascatas do PHEME
 
@@ -198,7 +208,7 @@ python scripts/process_pheme.py
 ### Recursos esperados:
 - RAM: 2GB
 - Disco: 500MB
-- Tempo: 10-15 minutos
+- Tempo: Processamento já realizado (dados incluídos)
 
 ### Resultado esperado:
 ```
@@ -231,7 +241,7 @@ python scripts/pheme_real_cascades_experiment.py --seed 42 --folds 5
 ### Recursos esperados:
 - RAM: 4GB
 - Disco: 1GB
-- Tempo: 1-2 horas (30 minutos com epochs=10)
+- Tempo: 2-3 minutos (com configurações de teste rápido)
 
 ### Resultado esperado:
 ```
@@ -271,7 +281,7 @@ python scripts/pheme_real_cascades_experiment.py --analyze-weights
 
 ### Recursos esperados:
 - RAM: 2GB
-- Tempo: 5 minutos
+- Tempo: < 1 minuto
 
 ### Resultado esperado:
 ```
@@ -301,7 +311,7 @@ python scripts/hypothesis_validation_viz.py
 ### Recursos esperados:
 - RAM: 3GB
 - Disco: 100MB (para salvar visualizações)
-- Tempo: 15 minutos
+- Tempo: 1-2 minutos
 
 ### Resultado esperado:
 ```

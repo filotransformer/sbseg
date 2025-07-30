@@ -39,12 +39,18 @@ env/
 .ipynb_checkpoints
 
 # Results and outputs
-results/
+results/*
+!results/.gitkeep
 outputs/
 models/
 *.h5
 *.pkl
 *.joblib
+*.json
+
+# Visualizations
+visualizations/*
+!visualizations/.gitkeep
 
 # Logs
 *.log
@@ -76,6 +82,11 @@ datasets/large/
 *.zip
 *.tar.gz
 *.rar
+
+# Dataset PHEME
+datasets/pheme-rnr-dataset/
+datasets/processed/
+!datasets/phemernrdataset.tar.bz2
 
 # Model checkpoints and weights
 checkpoints/

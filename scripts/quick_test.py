@@ -38,7 +38,8 @@ def check_dataset():
     processed_path = "datasets/processed"
     required_files = [
         "pheme_processed_cascades.csv",
-        "dataset_stats.json"
+        "pheme_simplified.csv",
+        "pheme_metadata.json"
     ]
     
     if os.path.exists(processed_path):
@@ -54,7 +55,7 @@ def check_dataset():
             print(f"✗ Arquivos faltando: {', '.join(missing_files)}")
     else:
         print("✗ Dataset processado não encontrado em datasets/processed")
-        print("💡 Execute: python scripts/download_dataset.py")
+        print("💡 Execute: python scripts/prepare_dataset.py")
     
     return False
 
@@ -63,7 +64,6 @@ def check_structure():
     required_dirs = [
         "scripts",
         "datasets",
-        "paper",
         "visualizations"
     ]
     
