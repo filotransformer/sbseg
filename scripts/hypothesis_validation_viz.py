@@ -401,10 +401,12 @@ def validate_hypothesis_4_2():
             )
     
     # 3. Scatter de características
+    # Usa coluna disponível no dataset TAGs
+    y_col = 'subtree_size_mean' if 'subtree_size_mean' in df.columns else 'cascade_lifetime'
     fig.add_trace(
         go.Scatter(
             x=df[df['label'] == 0]['cascade_size'],
-            y=df[df['label'] == 0]['cascade_lifetime'],
+            y=df[df['label'] == 0][y_col],
             mode='markers',
             marker=dict(color=COLORS['non_rumour'], size=5, opacity=0.5),
             name='Non-Rumour'
@@ -415,7 +417,7 @@ def validate_hypothesis_4_2():
     fig.add_trace(
         go.Scatter(
             x=df[df['label'] == 1]['cascade_size'],
-            y=df[df['label'] == 1]['cascade_lifetime'],
+            y=df[df['label'] == 1][y_col],
             mode='markers',
             marker=dict(color=COLORS['rumour'], size=5, opacity=0.5),
             name='Rumour'
