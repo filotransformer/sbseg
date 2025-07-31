@@ -114,7 +114,14 @@ echo "Validando hipóteses do artigo..."
 echo
 
 STEP_START=$(date +%s)
-python scripts/hypothesis_validation_viz.py | tee results/hypothesis_validation.log
+# Usa versão simplificada para dataset TAGs se existir
+if [ -f "datasets/processed/pheme_processed_cascades_tags.csv" ]; then
+    echo "Usando validação adaptada para TAGs..."
+    python scripts/hypothesis_validation_tags.py | tee results/hypothesis_validation.log
+else
+    echo "Usando validação padrão..."
+    python scripts/hypothesis_validation_viz.py | tee results/hypothesis_validation.log
+fi
 show_elapsed_time $STEP_START
 
 echo

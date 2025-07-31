@@ -68,24 +68,49 @@ def validate_hypothesis_2_1():
     """
     df, _ = load_data()
     
-    # Estatísticas por classe
-    stats_by_class = df.groupby('label').agg({
-        'cascade_depth': ['mean', 'std', 'median'],
-        'cascade_breadth': ['mean', 'std', 'median'],
-        'avg_branching_factor': ['mean', 'std', 'median'],
-        'level_3_count': ['mean', 'std'],  # Nós em níveis profundos
-        'level_4_count': ['mean', 'std']
-    }).round(3)
+    # Detecta se está usando dataset TAGs ou básico
+    if 'depth_normal_mean' in df.columns:
+        # Dataset TAGs
+        stats_by_class = df.groupby('label').agg({
+            'depth_normal_mean': ['mean', 'std', 'median'],
+            'depth_normal_max': ['mean', 'std', 'median'],
+            'is_leaf_mean': ['mean', 'std', 'median'],
+            'subtree_size_mean': ['mean', 'std'],
+            'n_descendants_mean': ['mean', 'std']
+        }).round(3)
+    else:
+        # Dataset básico
+        stats_by_class = df.groupby('label').agg({
+            'cascade_depth': ['mean', 'std', 'median'],
+            'cascade_breadth': ['mean', 'std', 'median'],
+            'avg_branching_factor': ['mean', 'std', 'median'],
+            'level_3_count': ['mean', 'std'],
+            'level_4_count': ['mean', 'std']
+        }).round(3)
     
     # Testes estatísticos
+    if 'depth_normal_mean' in df.columns:
+        # Dataset TAGs
+        depth_col = 'depth_normal_mean'
+    else:
+        # Dataset básico
+        depth_col = 'cascade_depth'
+    
     depth_ttest = stats.ttest_ind(
-        df[df['label'] == 1]['cascade_depth'],
-        df[df['label'] == 0]['cascade_depth']
+        df[df['label'] == 1][depth_col],
+        df[df['label'] == 0][depth_col]
     )
     
+    if 'depth_normal_mean' in df.columns:
+        # Dataset TAGs - usa is_leaf_mean como proxy para branching
+        branching_col = 'is_leaf_mean'
+    else:
+        # Dataset básico
+        branching_col = 'avg_branching_factor'
+    
     branching_ttest = stats.ttest_ind(
-        df[df['label'] == 1]['avg_branching_factor'],
-        df[df['label'] == 0]['avg_branching_factor']
+        df[df['label'] == 1][branching_col],
+        df[df['label'] == 0][branching_col]
     )
     
     # Visualização
@@ -102,7 +127,7 @@ def validate_hypothesis_2_1():
     # 1. Distribuição de profundidade
     for label, color, name in [(1, COLORS['rumour'], 'Rumour'), 
                                (0, COLORS['non_rumour'], 'Non-Rumour')]:
-        data = df[df['label'] == label]['cascade_depth']
+        data = df[df['label'] == label][depth_col]
         fig.add_trace(
             go.Violin(
                 y=data,
@@ -119,7 +144,7 @@ def validate_hypothesis_2_1():
     # 2. Fator de ramificação
     for label, color, name in [(1, COLORS['rumour'], 'Rumour'), 
                                (0, COLORS['non_rumour'], 'Non-Rumour')]:
-        data = df[df['label'] == label]['avg_branching_factor']
+        data = df[df['label'] == label][branching_col]
         fig.add_trace(
             go.Violin(
                 y=data,
@@ -135,8 +160,14 @@ def validate_hypothesis_2_1():
         )
     
     # 3. Presença em níveis profundos
-    deep_nodes_rumour = df[df['label'] == 1][['level_3_count', 'level_4_count']].sum(axis=1).mean()
-    deep_nodes_non_rumour = df[df['label'] == 0][['level_3_count', 'level_4_count']].sum(axis=1).mean()
+    if 'depth_normal_mean' in df.columns:
+        # Dataset TAGs - usa subtree_size_mean como proxy
+        deep_nodes_rumour = df[df['label'] == 1]['subtree_size_mean'].mean()
+        deep_nodes_non_rumour = df[df['label'] == 0]['subtree_size_mean'].mean()
+    else:
+        # Dataset básico
+        deep_nodes_rumour = df[df['label'] == 1][['level_3_count', 'level_4_count']].sum(axis=1).mean()
+        deep_nodes_non_rumour = df[df['label'] == 0][['level_3_count', 'level_4_count']].sum(axis=1).mean()
     
     fig.add_trace(
         go.Bar(
@@ -192,10 +223,10 @@ def validate_hypothesis_2_1():
         f.write(f"- Cascade Depth: p-value = {depth_ttest.pvalue:.3e} {'✓ SIGNIFICANT' if depth_ttest.pvalue < 0.05 else '✗ NOT SIGNIFICANT'}\n")
         f.write(f"- Branching Factor: p-value = {branching_ttest.pvalue:.3e} {'✓ SIGNIFICANT' if branching_ttest.pvalue < 0.05 else '✗ NOT SIGNIFICANT'}\n\n")
         f.write("Mean Values:\n")
-        f.write(f"- Rumour avg depth: {df[df['label']==1]['cascade_depth'].mean():.2f}\n")
-        f.write(f"- Non-rumour avg depth: {df[df['label']==0]['cascade_depth'].mean():.2f}\n")
-        f.write(f"- Rumour avg branching: {df[df['label']==1]['avg_branching_factor'].mean():.2f}\n")
-        f.write(f"- Non-rumour avg branching: {df[df['label']==0]['avg_branching_factor'].mean():.2f}\n")
+        f.write(f"- Rumour avg depth: {df[df['label']==1][depth_col].mean():.2f}\n")
+        f.write(f"- Non-rumour avg depth: {df[df['label']==0][depth_col].mean():.2f}\n")
+        f.write(f"- Rumour avg branching: {df[df['label']==1][branching_col].mean():.2f}\n")
+        f.write(f"- Non-rumour avg branching: {df[df['label']==0][branching_col].mean():.2f}\n")
     
     print("Hipótese 2.1 validada e visualizada!")
 
@@ -314,8 +345,14 @@ def validate_hypothesis_4_2():
     df, _ = load_data()
     
     # Features de cascata relevantes
-    cascade_features = ['cascade_size', 'cascade_depth', 'cascade_lifetime', 
-                       'unique_users', 'user_diversity']
+    if 'depth_normal_mean' in df.columns:
+        # Dataset TAGs
+        cascade_features = ['cascade_size', 'depth_normal_mean', 'subtree_size_mean', 
+                           'n_descendants_mean', 'is_leaf_mean']
+    else:
+        # Dataset básico
+        cascade_features = ['cascade_size', 'cascade_depth', 'cascade_lifetime', 
+                           'unique_users', 'user_diversity']
     
     # Criar matriz de correlação
     fig = make_subplots(
@@ -448,6 +485,14 @@ def validate_hypothesis_5_2():
     Hipótese 5.2: Perfis verificados influenciam na veracidade
     """
     df, _ = load_data()
+    
+    # Verifica se verified_ratio existe
+    if 'verified_ratio' not in df.columns:
+        print("⚠️  Hipótese 5.2 não pode ser validada com dataset TAGs (sem verified_ratio)")
+        with open('results/hypothesis_validation.log', 'a') as f:
+            f.write("\n## Hypothesis 5.2: Verified Profiles Influence\n")
+            f.write("NOT AVAILABLE: verified_ratio not present in TAGs dataset\n")
+        return
     
     # Criar visualização focada em verified_ratio
     fig, axes = plt.subplots(2, 2, figsize=(14, 10))
