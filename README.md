@@ -91,6 +91,24 @@ sbseg/
 └── LICENSE                   # Licença MIT
 ```
 
+## Descrição dos Scripts Principais
+
+| Script | Descrição | Propósito |
+|--------|-----------|-----------|
+| `prepare_dataset.py` | Prepara o dataset PHEME automaticamente | Download, extração e organização inicial dos dados |
+| `process_pheme.py` | Processa cascatas e gera embeddings semânticos | Extrai tweets, constrói árvores de propagação, gera embeddings SBERT |
+| `process_pheme_with_tags.py` | Processa cascatas com características filogenéticas | Adiciona análise filogenética via TAGs ao processamento |
+| `tag_construction.py` | Constrói Grafos de Alinhamento de Árvores (TAGs) | Extrai 12 ou 70 características filogenéticas das cascatas |
+| `ft_transformer.py` | Implementação do Feature Tokenizer Transformer | Arquitetura core do modelo Filo-Transformer |
+| `main_experiment.py` | Experimento principal otimizado | Comparação Filo-Transformer vs Baseline com configuração otimizada |
+| `pheme_real_cascades_experiment.py` | Experimento baseline (semântico apenas) | Avalia modelo usando apenas embeddings semânticos |
+| `pheme_real_cascades_experiment_tags.py` | Experimento com TAGs | Avalia modelo Filo-Transformer completo |
+| `hypothesis_validation_viz.py` | Validação estatística de hipóteses | Análise de significância estatística dos resultados |
+| `hyperparameter_optimization.py` | Otimização de hiperparâmetros | Busca sistemática de configurações ótimas |
+| `quick_test.py` | Teste mínimo de funcionamento | Verificação rápida da instalação |
+| `verify_dataset_integrity.py` | Verificação de integridade dos dados | Valida completude e correção do dataset processado |
+| `reproduce_all.sh` | Script de reprodução completa | Executa todos os experimentos automaticamente |
+
 # Dependências
 
 ## Bibliotecas Python Principais

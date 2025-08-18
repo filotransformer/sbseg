@@ -8,6 +8,7 @@ Compara Baseline (apenas semântico) vs Filo-Transformer com 70 features filogen
 import pandas as pd
 import numpy as np
 import os
+import random
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
@@ -21,12 +22,29 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 
+def set_global_seed(seed):
+    """
+    Define a semente de aleatoriedade globalmente para garantir reprodutibilidade.
+    
+    Args:
+        seed (int): Semente de aleatoriedade a ser usada
+    
+    Returns:
+        None
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
 # Configurações
 SEED = 42
-np.random.seed(SEED)
-torch.manual_seed(SEED)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed(SEED)
+set_global_seed(SEED)
 
 # Hyperparâmetros otimizados para TAGs
 BATCH_SIZE = 16

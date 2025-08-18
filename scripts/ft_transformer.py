@@ -92,7 +92,12 @@ class FTTransformer(nn.Module):
         self._init_weights()
     
     def _init_weights(self):
-        """Inicializa pesos do modelo."""
+        """
+        Inicializa pesos do modelo usando Xavier/Glorot para camadas lineares.
+        
+        Returns:
+            None
+        """
         for module in self.modules():
             if isinstance(module, nn.Linear):
                 nn.init.xavier_uniform_(module.weight)
@@ -160,8 +165,12 @@ class FTTransformer(nn.Module):
         """
         Prediz probabilidades usando sigmoid.
         
+        Args:
+            semantic_features: Tensor de embeddings semânticos (batch_size, n_semantic_features)
+            phylogenetic_features: Tensor de características filogenéticas (batch_size, n_phylogenetic_features)
+        
         Returns:
-            Probabilidades no intervalo [0, 1] onde 1 indica fake news
+            torch.Tensor: Probabilidades no intervalo [0, 1] onde 1 indica fake news
         """
         logits = self.forward(semantic_features, phylogenetic_features)
         return torch.sigmoid(logits)
@@ -170,6 +179,9 @@ class FTTransformer(nn.Module):
 class FTTransformerClassifier:
     """
     Wrapper sklearn-like para o FT-Transformer.
+    
+    Fornece interface compatível com scikit-learn para facilitar integração
+    com pipelines de machine learning existentes.
     """
     
     def __init__(self,
@@ -188,6 +200,21 @@ class FTTransformerClassifier:
                  verbose: bool = True):
         """
         Inicializa o classificador FT-Transformer.
+        
+        Args:
+            n_semantic_features: Número de dimensões do embedding semântico
+            n_phylogenetic_features: Número de características filogenéticas
+            d_model: Dimensão interna do modelo
+            n_heads: Número de cabeças de atenção
+            n_layers: Número de camadas do Transformer
+            d_ff: Dimensão da rede feed-forward
+            dropout: Taxa de dropout
+            learning_rate: Taxa de aprendizado para o otimizador
+            batch_size: Tamanho do batch para treinamento
+            n_epochs: Número de épocas de treinamento
+            device: Dispositivo para execução ('cuda' ou 'cpu')
+            early_stopping_patience: Paciência para early stopping
+            verbose: Se True, imprime informações durante treinamento
         """
         self.n_semantic_features = n_semantic_features
         self.n_phylogenetic_features = n_phylogenetic_features
@@ -209,7 +236,17 @@ class FTTransformerClassifier:
         
     def _prepare_data(self, X_semantic: np.ndarray, X_phylo: np.ndarray, 
                      y: Optional[np.ndarray] = None) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
-        """Prepara dados para PyTorch."""
+        """
+        Prepara dados numpy para tensores PyTorch.
+        
+        Args:
+            X_semantic: Array numpy com embeddings semânticos
+            X_phylo: Array numpy com características filogenéticas
+            y: Array numpy com labels (opcional)
+        
+        Returns:
+            tuple: Tensores PyTorch (X_semantic, X_phylo, y ou None)
+        """
         X_semantic_tensor = torch.FloatTensor(X_semantic).to(self.device)
         X_phylo_tensor = torch.FloatTensor(X_phylo).to(self.device)
         

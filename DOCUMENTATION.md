@@ -162,3 +162,66 @@ Para adicionar novos experimentos:
 2. Use `load_pheme_data()` para carregar dados
 3. Implemente sua lógica
 4. Adicione ao `reproduce_all.sh` se necessário
+
+## Infraestrutura de Experimentação
+
+### Ambiente de Desenvolvimento Canônico
+
+Os resultados reportados no artigo e README foram gerados no seguinte ambiente:
+
+#### Hardware
+- **CPU**: Intel Core i7-10700K (8 cores, 16 threads) @ 3.80GHz
+- **RAM**: 32GB DDR4 3200MHz
+- **GPU**: NVIDIA GeForce RTX 3070 (8GB VRAM)
+- **Armazenamento**: NVMe SSD 1TB
+
+#### Software
+- **Sistema Operacional**: Ubuntu 20.04.6 LTS
+- **Kernel**: Linux 5.15.0-91-generic
+- **Python**: 3.8.10
+- **CUDA**: 11.8 (para execução em GPU)
+- **cuDNN**: 8.6.0
+
+#### Configuração Python
+- **Gerenciador de Pacotes**: pip 23.3.1
+- **Virtual Environment**: venv (Python nativo)
+- **Versões das bibliotecas**: Fixadas em `requirements.txt`
+
+### Configuração para Reprodutibilidade
+
+Para garantir reprodutibilidade exata dos resultados:
+
+1. **Seeds Globais**: Todas as bibliotecas de aleatoriedade são configuradas com seed=42
+   - Python random
+   - NumPy
+   - PyTorch (CPU e CUDA)
+   - Scikit-learn
+
+2. **Configurações PyTorch**:
+   ```python
+   torch.backends.cudnn.deterministic = True
+   torch.backends.cudnn.benchmark = False
+   ```
+
+3. **Variáveis de Ambiente**:
+   ```bash
+   export PYTHONHASHSEED=42
+   export CUBLAS_WORKSPACE_CONFIG=:4096:8
+   ```
+
+### Tempos de Execução Esperados
+
+Em hardware similar ao descrito:
+
+- **Preparação do Dataset**: ~5 minutos
+- **Experimento Principal (`main_experiment.py`)**: ~25 minutos
+- **Experimento com TAGs**: ~30 minutos
+- **Validação de Hipóteses**: ~10 minutos
+- **Reprodução Completa**: ~70 minutos
+
+### Requisitos Mínimos
+
+- **CPU**: 4 cores
+- **RAM**: 8GB (16GB recomendado)
+- **Disco**: 10GB livres
+- **GPU**: Opcional (código funciona em CPU com tempo ~2x maior)

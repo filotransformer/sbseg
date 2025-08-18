@@ -9,6 +9,8 @@ import pandas as pd
 import numpy as np
 import os
 import json
+import random
+import argparse
 from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler, RobustScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
@@ -25,7 +27,95 @@ import sys
 sys.path.append(str(Path(__file__).parent))
 from pheme_real_cascades_experiment_tags import BaselineTransformer, FiloTransformerTAGs, load_pheme_tags_data
 
-# Configurações otimizadas (baseadas em busca de hiperparâmetros)
+
+def set_global_seed(seed):
+    """
+    Define a semente de aleatoriedade globalmente para garantir reprodutibilidade.
+    
+    Args:
+        seed (int): Semente de aleatoriedade a ser usada
+    
+    Returns:
+        None
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ['PYTHONHASHSEED'] = str(seed)
+
+
+def parse_args():
+    """
+    Processa argumentos de linha de comando para configuração do experimento.
+    
+    Returns:
+        argparse.Namespace: Argumentos processados contendo configurações do experimento
+    """
+    parser = argparse.ArgumentParser(
+        description='Experimento Principal do Filo-Transformer - Detecção de Fake News',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    
+    # Hiperparâmetros do modelo
+    parser.add_argument('--batch-size', type=int, default=16,
+                        help='Tamanho do batch para treinamento')
+    parser.add_argument('--learning-rate', type=float, default=3e-5,
+                        help='Taxa de aprendizado para o otimizador')
+    parser.add_argument('--d-model', type=int, default=256,
+                        help='Dimensão do modelo transformer')
+    parser.add_argument('--n-heads', type=int, default=8,
+                        help='Número de cabeças de atenção')
+    parser.add_argument('--n-layers', type=int, default=3,
+                        help='Número de camadas do transformer')
+    parser.add_argument('--dropout', type=float, default=0.2,
+                        help='Taxa de dropout')
+    parser.add_argument('--weight-decay', type=float, default=0.01,
+                        help='Weight decay para regularização L2')
+    
+    # Configurações de treinamento
+    parser.add_argument('--num-epochs', type=int, default=50,
+                        help='Número máximo de épocas')
+    parser.add_argument('--patience', type=int, default=15,
+                        help='Paciência para early stopping')
+    parser.add_argument('--n-folds', type=int, default=5,
+                        help='Número de folds para validação cruzada')
+    parser.add_argument('--seed', type=int, default=42,
+                        help='Semente de aleatoriedade para reprodutibilidade')
+    
+    # Caminhos de entrada/saída
+    parser.add_argument('--data-dir', type=str, default='data',
+                        help='Diretório dos dados processados')
+    parser.add_argument('--output-dir', type=str, default='results',
+                        help='Diretório para salvar resultados')
+    parser.add_argument('--config-file', type=str, default=None,
+                        help='Arquivo JSON com configurações customizadas')
+    
+    # Opções adicionais
+    parser.add_argument('--device', type=str, default='auto',
+                        choices=['auto', 'cpu', 'cuda'],
+                        help='Dispositivo para execução (auto detecta automaticamente)')
+    parser.add_argument('--verbose', action='store_true',
+                        help='Imprime informações detalhadas durante execução')
+    
+    args = parser.parse_args()
+    
+    # Carrega configurações de arquivo se fornecido
+    if args.config_file and os.path.exists(args.config_file):
+        with open(args.config_file, 'r') as f:
+            config = json.load(f)
+            for key, value in config.items():
+                if hasattr(args, key.lower().replace('_', '-')):
+                    setattr(args, key.lower().replace('_', '-'), value)
+    
+    return args
+
+
+# Configurações padrão otimizadas
 OPTIMAL_CONFIG = {
     'SEED': 42,
     'BATCH_SIZE': 16,
@@ -40,33 +130,32 @@ OPTIMAL_CONFIG = {
     'N_FOLDS': 5
 }
 
-# Tenta carregar configuração otimizada se existir
-if os.path.exists('scripts/optimal_config.json'):
-    with open('scripts/optimal_config.json', 'r') as f:
-        loaded_config = json.load(f)
-        OPTIMAL_CONFIG.update(loaded_config)
-
-# Setup
-np.random.seed(OPTIMAL_CONFIG['SEED'])
-torch.manual_seed(OPTIMAL_CONFIG['SEED'])
-if torch.cuda.is_available():
-    torch.cuda.manual_seed(OPTIMAL_CONFIG['SEED'])
-
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-def train_model(model, train_loader, val_loader, model_name="Model"):
-    """Treina modelo com configuração otimizada"""
+def train_model(model, train_loader, val_loader, config, device, model_name="Model"):
+    """
+    Treina modelo com configuração otimizada e early stopping.
+    
+    Args:
+        model (nn.Module): Modelo a ser treinado
+        train_loader (DataLoader): DataLoader para dados de treinamento
+        val_loader (DataLoader): DataLoader para dados de validação
+        config (dict): Dicionário com configurações de treinamento
+        device (torch.device): Dispositivo para execução (CPU/GPU)
+        model_name (str): Nome do modelo para logging
+    
+    Returns:
+        tuple: (modelo treinado, histórico de treinamento)
+    """
     
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
     optimizer = optim.AdamW(
         model.parameters(), 
-        lr=OPTIMAL_CONFIG['LEARNING_RATE'], 
-        weight_decay=OPTIMAL_CONFIG['WEIGHT_DECAY']
+        lr=config['LEARNING_RATE'], 
+        weight_decay=config['WEIGHT_DECAY']
     )
     scheduler = optim.lr_scheduler.OneCycleLR(
         optimizer, 
-        max_lr=OPTIMAL_CONFIG['LEARNING_RATE'] * 10,
-        epochs=OPTIMAL_CONFIG['NUM_EPOCHS'],
+        max_lr=config['LEARNING_RATE'] * 10,
+        epochs=config['NUM_EPOCHS'],
         steps_per_epoch=len(train_loader),
         pct_start=0.1
     )
@@ -76,20 +165,20 @@ def train_model(model, train_loader, val_loader, model_name="Model"):
     best_model_state = None
     history = {'train_loss': [], 'val_auc': []}
     
-    for epoch in range(OPTIMAL_CONFIG['NUM_EPOCHS']):
+    for epoch in range(config['NUM_EPOCHS']):
         # Training
         model.train()
         train_loss = 0
         for batch in train_loader:
             if len(batch) == 2:  # Baseline
                 features, labels = batch
-                features, labels = features.to(DEVICE), labels.to(DEVICE)
+                features, labels = features.to(device), labels.to(device)
                 outputs = model(features)
             else:  # Filo-Transformer
                 semantic, phylo, labels = batch
-                semantic = semantic.to(DEVICE)
-                phylo = phylo.to(DEVICE)
-                labels = labels.to(DEVICE)
+                semantic = semantic.to(device)
+                phylo = phylo.to(device)
+                labels = labels.to(device)
                 outputs = model(semantic, phylo)
             
             loss = criterion(outputs, labels)
@@ -111,7 +200,7 @@ def train_model(model, train_loader, val_loader, model_name="Model"):
             for batch in val_loader:
                 if len(batch) == 2:  # Baseline
                     features, labels = batch
-                    features, labels = features.to(DEVICE), labels.to(DEVICE)
+                    features, labels = features.to(device), labels.to(device)
                     outputs = model(features)
                 else:  # Filo-Transformer
                     semantic, phylo, labels = batch
@@ -142,7 +231,7 @@ def train_model(model, train_loader, val_loader, model_name="Model"):
         else:
             patience_counter += 1
             
-        if patience_counter >= OPTIMAL_CONFIG['PATIENCE']:
+        if patience_counter >= config['PATIENCE']:
             print(f"  Early stopping at epoch {epoch}")
             break
     
@@ -152,8 +241,18 @@ def train_model(model, train_loader, val_loader, model_name="Model"):
     
     return model, history
 
-def evaluate_model(model, test_loader):
-    """Avalia modelo com métricas completas"""
+def evaluate_model(model, test_loader, device):
+    """
+    Avalia modelo com métricas completas.
+    
+    Args:
+        model (nn.Module): Modelo treinado a ser avaliado
+        test_loader (DataLoader): DataLoader com dados de teste
+        device (torch.device): Dispositivo para execução
+    
+    Returns:
+        dict: Dicionário com métricas de avaliação (accuracy, precision, recall, f1, auc)
+    """
     model.eval()
     all_preds = []
     all_probs = []
@@ -163,12 +262,12 @@ def evaluate_model(model, test_loader):
         for batch in test_loader:
             if len(batch) == 2:  # Baseline
                 features, labels = batch
-                features = features.to(DEVICE)
+                features = features.to(device)
                 outputs = model(features)
             else:  # Filo-Transformer
                 semantic, phylo, labels = batch
-                semantic = semantic.to(DEVICE)
-                phylo = phylo.to(DEVICE)
+                semantic = semantic.to(device)
+                phylo = phylo.to(device)
                 outputs = model(semantic, phylo)
             
             probs = torch.softmax(outputs, dim=1)
@@ -187,15 +286,51 @@ def evaluate_model(model, test_loader):
         'labels': all_labels
     }
 
-def run_main_experiment():
-    """Executa o experimento principal com configuração otimizada"""
+def run_main_experiment(args=None):
+    """
+    Executa o experimento principal com configuração otimizada.
+    
+    Args:
+        args (argparse.Namespace, optional): Argumentos de configuração. 
+                                            Se None, usa valores padrão.
+    
+    Returns:
+        dict: Resultados completos do experimento
+    """
+    # Se não houver argumentos, usa configurações padrão
+    if args is None:
+        args = parse_args()
+    
+    # Configura seed global para reprodutibilidade
+    set_global_seed(args.seed)
+    
+    # Determina dispositivo
+    if args.device == 'auto':
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    else:
+        device = torch.device(args.device)
+    
+    # Prepara configuração
+    config = {
+        'SEED': args.seed,
+        'BATCH_SIZE': args.batch_size,
+        'LEARNING_RATE': args.learning_rate,
+        'D_MODEL': args.d_model,
+        'N_HEADS': args.n_heads,
+        'N_LAYERS': args.n_layers,
+        'DROPOUT': args.dropout,
+        'WEIGHT_DECAY': args.weight_decay,
+        'NUM_EPOCHS': args.num_epochs,
+        'PATIENCE': args.patience,
+        'N_FOLDS': args.n_folds
+    }
     
     print("="*70)
     print("EXPERIMENTO PRINCIPAL - FILO-TRANSFORMER vs BASELINE")
     print("="*70)
-    print(f"\nDispositivo: {DEVICE}")
-    print("\nConfiguração otimizada:")
-    for key, value in OPTIMAL_CONFIG.items():
+    print(f"\nDispositivo: {device}")
+    print("\nConfiguração:")
+    for key, value in config.items():
         if key != 'SEED':
             print(f"  {key}: {value}")
     
@@ -223,16 +358,16 @@ def run_main_experiment():
     
     # K-Fold Cross Validation
     kfold = StratifiedKFold(
-        n_splits=OPTIMAL_CONFIG['N_FOLDS'], 
+        n_splits=config['N_FOLDS'], 
         shuffle=True, 
-        random_state=OPTIMAL_CONFIG['SEED']
+        random_state=config['SEED']
     )
     
-    print(f"\nIniciando validação cruzada {OPTIMAL_CONFIG['N_FOLDS']}-fold...")
+    print(f"\nIniciando validação cruzada {config['N_FOLDS']}-fold...")
     print("-"*70)
     
     for fold, (train_idx, test_idx) in enumerate(kfold.split(X_semantic, y), 1):
-        print(f"\nFOLD {fold}/{OPTIMAL_CONFIG['N_FOLDS']}")
+        print(f"\nFOLD {fold}/{config['N_FOLDS']}")
         print("-"*30)
         
         # Split data
@@ -282,7 +417,7 @@ def run_main_experiment():
         )
         
         # DataLoaders
-        batch_size = OPTIMAL_CONFIG['BATCH_SIZE']
+        batch_size = config['BATCH_SIZE']
         train_loader_baseline = DataLoader(train_dataset_baseline, batch_size=batch_size, shuffle=True)
         val_loader_baseline = DataLoader(val_dataset_baseline, batch_size=batch_size)
         test_loader_baseline = DataLoader(test_dataset_baseline, batch_size=batch_size)
@@ -296,19 +431,21 @@ def run_main_experiment():
         baseline_model = BaselineTransformer(
             num_features=X_semantic_train.shape[1],
             num_classes=2,
-            d_model=OPTIMAL_CONFIG['D_MODEL'],
-            n_heads=OPTIMAL_CONFIG['N_HEADS'],
-            n_layers=OPTIMAL_CONFIG['N_LAYERS'],
-            dropout=OPTIMAL_CONFIG['DROPOUT']
-        ).to(DEVICE)
+            d_model=config['D_MODEL'],
+            n_heads=config['N_HEADS'],
+            n_layers=config['N_LAYERS'],
+            dropout=config['DROPOUT']
+        ).to(device)
         
         baseline_model, _ = train_model(
             baseline_model, 
             train_loader_baseline, 
             val_loader_baseline,
+            config,
+            device,
             "Baseline"
         )
-        baseline_metrics = evaluate_model(baseline_model, test_loader_baseline)
+        baseline_metrics = evaluate_model(baseline_model, test_loader_baseline, device)
         baseline_results.append(baseline_metrics)
         
         print(f"\nBaseline - Resultados:")
@@ -322,19 +459,21 @@ def run_main_experiment():
             num_semantic_features=X_semantic_train.shape[1],
             num_phylo_features=X_phylo_train.shape[1],
             num_classes=2,
-            d_model=OPTIMAL_CONFIG['D_MODEL'],
-            n_heads=OPTIMAL_CONFIG['N_HEADS'],
-            n_layers=OPTIMAL_CONFIG['N_LAYERS'],
-            dropout=OPTIMAL_CONFIG['DROPOUT']
-        ).to(DEVICE)
+            d_model=config['D_MODEL'],
+            n_heads=config['N_HEADS'],
+            n_layers=config['N_LAYERS'],
+            dropout=config['DROPOUT']
+        ).to(device)
         
         filo_model, _ = train_model(
             filo_model, 
             train_loader_filo, 
             val_loader_filo,
+            config,
+            device,
             "Filo-Transformer"
         )
-        filo_metrics = evaluate_model(filo_model, test_loader_filo)
+        filo_metrics = evaluate_model(filo_model, test_loader_filo, device)
         filo_results.append(filo_metrics)
         
         # Capture fusion weights
@@ -416,7 +555,7 @@ def run_main_experiment():
     # Save results
     results = {
         'experiment': 'Filo-Transformer Main Experiment',
-        'config': OPTIMAL_CONFIG,
+        'config': config,
         'dataset': {
             'total_samples': len(y),
             'num_phylo_features': len(phylo_cols),
@@ -441,17 +580,21 @@ def run_main_experiment():
     # Convert all results to be JSON serializable
     results = convert_to_serializable(results)
     
-    os.makedirs('results', exist_ok=True)
-    with open('results/main_experiment_results.json', 'w') as f:
+    os.makedirs(args.output_dir, exist_ok=True)
+    output_path = os.path.join(args.output_dir, 'main_experiment_results.json')
+    with open(output_path, 'w') as f:
         json.dump(results, f, indent=2)
     
-    print(f"\n💾 Resultados completos salvos em: results/main_experiment_results.json")
+    print(f"\n💾 Resultados completos salvos em: {output_path}")
     
     # Success check
     if improvements['auc'] > 1.5:  # Pelo menos 1.5% de melhoria
         print("\n✅ SUCESSO! Filo-Transformer demonstrou superioridade clara sobre o baseline!")
     else:
         print("\n⚠️ AVISO: Melhoria abaixo do esperado. Considere reprocessar dados ou ajustar hiperparâmetros.")
+    
+    return results
 
 if __name__ == "__main__":
-    run_main_experiment()
+    args = parse_args()
+    run_main_experiment(args)
