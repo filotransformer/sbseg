@@ -1,0 +1,19 @@
+Key characteristics of the non-rumor cascade:
+
+  Structure:
+  - Maximum 4 levels deep (vs 12 for rumors)
+  - 112 total nodes (vs 2,458 for rumors)
+  - Star-like pattern with massive spread at Level 1
+
+  Distribution:
+  - Level 0: 1 node (source)
+  - Level 1: 60 nodes (53% - viral explosion)
+  - Level 2: 39 nodes (35% - secondary sharing)
+  - Level 3: 11 nodes (10% - minimal discussion)
+  - Level 4: 1 node (rare deep thread)
+
+  Visual Features:
+  - Green/Blue gradient - indicating verified information
+  - Wide horizontal spread at Level 1 showing viral burst
+  - Minimal depth - most activity in first 2 levels
+  - Light green background - emphasizing trustworthy content

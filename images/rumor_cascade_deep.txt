@@ -1,0 +1,9 @@
+The visualization features:
+- 12 levels deep - showing extreme depth of rumor debates
+- 2,458 total nodes - all visible in the cascade
+- Red/orange gradient - darker colors at deeper levels showing controversy intensity
+- Multiple debate threads - 7 major branches showing fragmented discussions
+- Dynamic figure height - automatically adjusted to 30 units tall to show all nodes
+- Clear level indicators - showing the propagation depth
+
+The tree clearly demonstrates how rumors generate deep, prolonged debates with multiple verification attempts and counter-arguments, exactly as described in your analysis.

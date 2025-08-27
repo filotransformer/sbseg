@@ -1,0 +1,8 @@
+Principais Características:
+- Linhagens Coloridas: Cada subcascata filogenética distinta possui sua própria cor
+- Cascata principal em vermelho (propagação original)
+- 29 linhagens distintas identificadas por meio de detecção de recombinação (limiar de similaridade ρ ≥ 0,7)
+- 26 pontos de recombinação marcados com arestas roxas
+- Arestas tracejadas roxas mostram onde as cascatas se fundem por similaridade semântica
+
+A visualização mostra como a cascata de rumores é composta por múltiplas cascatas menores que se fundiram quando tuítes com alta similaridade semântica (≥ 0,7) de diferentes linhagens criaram eventos de recombinação. Cada cor representa uma árvore filogenética distinta que se tornou parte da estrutura maior da cascata.
