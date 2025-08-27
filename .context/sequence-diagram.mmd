@@ -1,0 +1,131 @@
+sequenceDiagram
+    %% Complete Filo-Transformer Pipeline Sequence
+
+    participant User
+    participant CLI as Command Line
+    participant Prep as prepare_dataset.py
+    participant PHEMEProc as PHEMEProcessor
+    participant TAGConst as TAGConstructor
+    participant SBERT as SentenceTransformer
+    participant ExpRun as ExperimentRunner
+    participant FTModel as FiloTransformerTAGs
+    participant Baseline as BaselineTransformer
+    participant Validator as HypothesisValidator
+
+    %% Dataset Preparation Phase
+    User->>CLI: python prepare_dataset.py
+    CLI->>Prep: Initialize
+    Prep->>Prep: Extract phemernrdataset.tar.bz2
+    Prep->>PHEMEProc: Process PHEME events
+    
+    loop For each event [charliehebdo, ferguson, etc]
+        PHEMEProc->>PHEMEProc: extract_tweet_data()
+        PHEMEProc->>PHEMEProc: build_cascade_tree()
+        PHEMEProc->>PHEMEProc: extract_cascade_features()
+    end
+    
+    PHEMEProc-->>Prep: Basic features (12)
+    
+    %% Advanced Processing with TAGs
+    Prep->>TAGConst: Process with TAGs
+    Prep->>SBERT: Initialize model
+    
+    loop For each cascade
+        TAGConst->>TAGConst: build_tag()
+        TAGConst->>TAGConst: extract_phylogenetic_features()
+        SBERT->>SBERT: encode(texts)
+        SBERT-->>TAGConst: Semantic embeddings (384-dim)
+        TAGConst-->>Prep: TAGs features (70)
+    end
+    
+    Prep-->>CLI: Dataset ready
+    CLI-->>User: Processing complete
+
+    %% Experiment Execution Phase
+    User->>CLI: python main_experiment.py
+    CLI->>ExpRun: Initialize with OptimalConfig
+    ExpRun->>ExpRun: Load processed dataset
+    ExpRun->>ExpRun: Setup 5-fold CV
+    
+    loop For each fold [1-5]
+        %% Baseline Training
+        ExpRun->>Baseline: Initialize model
+        ExpRun->>ExpRun: Split train/val data
+        
+        loop Training epochs
+            ExpRun->>Baseline: forward(semantic_features)
+            Baseline-->>ExpRun: predictions
+            ExpRun->>ExpRun: Calculate loss
+            ExpRun->>Baseline: backward() & optimize
+            
+            alt Early stopping triggered
+                ExpRun->>ExpRun: Stop training
+            end
+        end
+        
+        ExpRun->>Baseline: Evaluate on test
+        Baseline-->>ExpRun: Baseline metrics
+        
+        %% Filo-Transformer Training
+        ExpRun->>FTModel: Initialize model
+        
+        loop Training epochs
+            ExpRun->>FTModel: forward(semantic, phylogenetic)
+            FTModel->>FTModel: Tokenize features
+            FTModel->>FTModel: Multi-head attention
+            FTModel->>FTModel: Fusion mechanism
+            FTModel-->>ExpRun: predictions
+            ExpRun->>ExpRun: Calculate loss
+            ExpRun->>FTModel: backward() & optimize
+            
+            alt Early stopping triggered
+                ExpRun->>ExpRun: Stop training
+            end
+        end
+        
+        ExpRun->>FTModel: Evaluate on test
+        FTModel-->>ExpRun: Filo metrics
+        ExpRun->>FTModel: get_fusion_weights()
+        FTModel-->>ExpRun: Weight analysis
+    end
+    
+    ExpRun->>ExpRun: Aggregate results
+    ExpRun->>ExpRun: Statistical tests
+    ExpRun-->>CLI: Final results
+    CLI-->>User: Display metrics
+
+    %% Hypothesis Validation Phase
+    User->>CLI: python hypothesis_validation_viz.py
+    CLI->>Validator: Initialize
+    Validator->>Validator: Load experiment results
+    
+    par Parallel validation
+        Validator->>Validator: validate_hypothesis_2_1()
+        Note right of Validator: Terminal leaves analysis
+    and
+        Validator->>Validator: validate_hypothesis_3_2()
+        Note right of Validator: Performance comparison
+    and
+        Validator->>Validator: validate_hypothesis_4_2()
+        Note right of Validator: Structure correlation
+    and
+        Validator->>Validator: validate_hypothesis_5_2()
+        Note right of Validator: Verified user analysis
+    end
+    
+    Validator->>Validator: Generate visualizations
+    Validator->>Validator: Create HTML reports
+    Validator-->>CLI: Validation complete
+    CLI-->>User: Results saved
+
+    %% Model Inference Flow
+    Note over User,FTModel: Inference Pipeline
+    User->>CLI: New cascade for classification
+    CLI->>SBERT: encode(cascade_texts)
+    SBERT-->>CLI: Semantic features
+    CLI->>TAGConst: extract_phylogenetic_features(cascade)
+    TAGConst-->>CLI: Phylogenetic features
+    CLI->>FTModel: predict(semantic, phylogenetic)
+    FTModel->>FTModel: Process through transformer
+    FTModel-->>CLI: Fake/Real prediction
+    CLI-->>User: Classification result

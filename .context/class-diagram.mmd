@@ -1,0 +1,203 @@
+classDiagram
+    %% Core Neural Network Models
+    class FTTransformer {
+        +int n_semantic_features
+        +int n_phylogenetic_features  
+        +int d_model
+        +int n_heads
+        +int n_layers
+        +float dropout
+        +nn.Linear semantic_tokenizer
+        +nn.ModuleList phylogenetic_tokenizers
+        +nn.Parameter cls_token
+        +nn.Parameter positional_encoding
+        +nn.TransformerEncoder transformer_encoder
+        +nn.Sequential classifier
+        +forward(semantic_features, phylogenetic_features) Tensor
+        +_init_weights() void
+        +get_attention_weights() Tensor
+    }
+
+    class FTTransformerClassifier {
+        +float learning_rate
+        +int batch_size
+        +int n_epochs
+        +int early_stopping_patience
+        +FTTransformer model
+        +torch.optim.Adam optimizer
+        +fit(X_semantic, X_phylogenetic, y) self
+        +predict(X_semantic, X_phylogenetic) ndarray
+        +predict_proba(X_semantic, X_phylogenetic) ndarray
+        -_train_epoch(train_loader) float
+        -_validate(val_loader) tuple
+    }
+
+    class BaselineTransformer {
+        +int num_features
+        +int d_model
+        +int n_heads
+        +int n_layers
+        +float dropout
+        +nn.Linear feature_tokenizer
+        +nn.Parameter cls_token
+        +nn.TransformerEncoder transformer
+        +nn.Sequential classifier
+        +forward(features) Tensor
+    }
+
+    class FiloTransformerTAGs {
+        +int n_semantic_features
+        +int n_tags_features
+        +nn.MultiheadAttention fusion_attention
+        +nn.Linear fusion_gate
+        +nn.ModuleList grouped_phylogenetic_tokenizers
+        +dict fusion_weights_history
+        +forward(semantic_features, tags_features) Tensor
+        +get_fusion_weights() dict
+        +analyze_attention_patterns() dict
+    }
+
+    %% Data Processing Classes
+    class PHEMEProcessor {
+        +str base_path
+        +list events
+        +dict event_labels
+        +extract_tweet_data(tweet_path) dict
+        +build_cascade_tree(tweets) nx.DiGraph
+        +extract_cascade_features(tree, tweets) dict
+        +process_event(event_name) DataFrame
+        +process_all_events() DataFrame
+        +save_processed_data(df, output_path) void
+    }
+
+    class PHEMEAdvancedProcessor {
+        +TAGConstructor tag_constructor
+        +SentenceTransformer sentence_model
+        +extract_advanced_features(cascade) dict
+        +generate_semantic_embeddings(texts) ndarray
+        +process_with_tags() DataFrame
+        +save_embeddings(embeddings, path) void
+    }
+
+    class TAGConstructor {
+        +float similarity_threshold
+        +build_tag(tree, embeddings) nx.Graph
+        +extract_phylogenetic_features(tag) dict
+        +calculate_centrality_metrics(graph) dict
+        +detect_communities(graph) dict
+        +analyze_evolutionary_patterns(graph) dict
+        -_calculate_depth(tree, node) int
+        -_calculate_recombination_degree(tag, node) float
+        -_add_recombinations(tag, tree, embeddings) void
+    }
+
+    %% Data Entities
+    class Cascade {
+        +str source_tweet_id
+        +str source_text
+        +int label
+        +str event
+        +dict tree_structure
+        +list reactions
+        +float cascade_lifetime
+        +int cascade_size
+        +int cascade_depth
+        +int unique_users
+        +to_features() dict
+        +to_semantic_input() str
+    }
+
+    class SemanticFeatures {
+        +int dimensions
+        +str model_name
+        +ndarray embeddings
+        +normalize() ndarray
+        +reduce_dimensions(n_components) ndarray
+    }
+
+    class PhylogeneticFeatures {
+        +dict basic_features
+        +dict advanced_features
+        +get_basic_vector() ndarray
+        +get_advanced_vector() ndarray
+        +aggregate_stats() dict
+    }
+
+    %% Experiment Management
+    class ExperimentRunner {
+        +dict optimal_config
+        +int n_folds
+        +StratifiedKFold kfold
+        +StandardScaler semantic_scaler
+        +RobustScaler phylogenetic_scaler
+        +run_baseline_experiment() dict
+        +run_filo_experiment() dict
+        +compare_models(baseline_results, filo_results) dict
+        +save_results(results, path) void
+        +plot_performance_comparison() void
+    }
+
+    class HypothesisValidator {
+        +DataFrame data
+        +dict experiment_results
+        +validate_hypothesis_2_1() dict
+        +validate_hypothesis_3_2() dict
+        +validate_hypothesis_4_2() dict
+        +validate_hypothesis_5_2() dict
+        +generate_validation_report() str
+        +create_interactive_visualizations() void
+    }
+
+    class OptimalConfig {
+        +int SEED
+        +int BATCH_SIZE
+        +float LEARNING_RATE
+        +int D_MODEL
+        +int N_HEADS
+        +int N_LAYERS
+        +float DROPOUT
+        +float WEIGHT_DECAY
+        +int NUM_EPOCHS
+        +int PATIENCE
+        +int N_FOLDS
+        +to_dict() dict
+        +from_json(path) OptimalConfig
+    }
+
+    %% External Dependencies
+    class SentenceTransformer {
+        <<external>>
+        +str model_name
+        +encode(texts) ndarray
+    }
+
+    class StratifiedKFold {
+        <<external>>
+        +int n_splits
+        +split(X, y) iterator
+    }
+
+    %% Relationships
+    FTTransformer <|-- FiloTransformerTAGs : extends
+    FTTransformer --* FTTransformerClassifier : contains
+    
+    PHEMEProcessor <|-- PHEMEAdvancedProcessor : extends
+    PHEMEAdvancedProcessor --> TAGConstructor : uses
+    PHEMEAdvancedProcessor --> SentenceTransformer : uses
+    
+    PHEMEProcessor ..> Cascade : creates
+    Cascade ..> SemanticFeatures : generates
+    Cascade ..> PhylogeneticFeatures : generates
+    
+    TAGConstructor ..> PhylogeneticFeatures : produces
+    
+    ExperimentRunner --> BaselineTransformer : evaluates
+    ExperimentRunner --> FiloTransformerTAGs : evaluates
+    ExperimentRunner --> OptimalConfig : uses
+    ExperimentRunner --> StratifiedKFold : uses
+    
+    HypothesisValidator --> ExperimentRunner : validates
+    
+    FTTransformer ..> SemanticFeatures : processes
+    FTTransformer ..> PhylogeneticFeatures : processes
+    BaselineTransformer ..> SemanticFeatures : processes

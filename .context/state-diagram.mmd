@@ -1,0 +1,228 @@
+stateDiagram-v2
+    %% Filo-Transformer Pipeline State Diagram
+
+    [*] --> Initialization: Start Pipeline
+
+    state Initialization {
+        [*] --> CheckEnvironment
+        CheckEnvironment --> LoadConfig
+        LoadConfig --> ValidateSetup
+        ValidateSetup --> [*]
+    }
+
+    Initialization --> DatasetPreparation: Setup Complete
+
+    state DatasetPreparation {
+        [*] --> CheckDataset
+        CheckDataset --> ExtractArchive: Not Found
+        CheckDataset --> LoadExisting: Found
+        ExtractArchive --> ProcessEvents
+        
+        state ProcessEvents {
+            [*] --> SelectEvent
+            SelectEvent --> ExtractTweets
+            ExtractTweets --> BuildTree
+            BuildTree --> ExtractFeatures
+            ExtractFeatures --> SelectEvent: More Events
+            ExtractFeatures --> [*]: All Events Done
+        }
+        
+        ProcessEvents --> SaveProcessed
+        LoadExisting --> [*]
+        SaveProcessed --> [*]
+    }
+
+    DatasetPreparation --> FeatureExtraction: Dataset Ready
+
+    state FeatureExtraction {
+        [*] --> LoadCascades
+        LoadCascades --> fork_features
+        
+        state fork_features <<fork>>
+        fork_features --> SemanticProcessing
+        fork_features --> PhylogeneticProcessing
+        
+        state SemanticProcessing {
+            [*] --> LoadSBERT
+            LoadSBERT --> EncodeTweets
+            EncodeTweets --> NormalizeEmbeddings
+            NormalizeEmbeddings --> [*]: 384-dim vectors
+        }
+        
+        state PhylogeneticProcessing {
+            [*] --> BasicFeatures
+            BasicFeatures --> AdvancedTAGs: If requested
+            BasicFeatures --> [*]: 12 features
+            
+            state AdvancedTAGs {
+                [*] --> BuildTAG
+                BuildTAG --> ComputeCentrality
+                ComputeCentrality --> DetectCommunities
+                DetectCommunities --> AnalyzeEvolution
+                AnalyzeEvolution --> AggregateStats
+                AggregateStats --> [*]: 70 features
+            }
+            
+            AdvancedTAGs --> [*]
+        }
+        
+        state join_features <<join>>
+        SemanticProcessing --> join_features
+        PhylogeneticProcessing --> join_features
+        join_features --> [*]
+    }
+
+    FeatureExtraction --> ModelTraining: Features Ready
+
+    state ModelTraining {
+        [*] --> InitializeFold
+        InitializeFold --> SplitData
+        
+        state SplitData {
+            [*] --> TrainValTest
+            TrainValTest --> ScaleFeatures
+            ScaleFeatures --> [*]
+        }
+        
+        SplitData --> TrainModels
+        
+        state TrainModels {
+            [*] --> fork_models
+            
+            state fork_models <<fork>>
+            fork_models --> TrainBaseline
+            fork_models --> TrainFilo
+            
+            state TrainBaseline {
+                [*] --> InitBaseline
+                InitBaseline --> BaselineEpoch
+                BaselineEpoch --> ValidateBaseline
+                ValidateBaseline --> CheckEarlySto: Check
+                CheckEarlySto --> BaselineEpoch: Continue
+                CheckEarlySto --> [*]: Stop
+            }
+            
+            state TrainFilo {
+                [*] --> InitFilo
+                InitFilo --> FiloEpoch
+                
+                state FiloEpoch {
+                    [*] --> TokenizeInputs
+                    TokenizeInputs --> ApplyAttention
+                    ApplyAttention --> FuseModalities
+                    FuseModalities --> TransformerPass
+                    TransformerPass --> ComputeLoss
+                    ComputeLoss --> [*]
+                }
+                
+                FiloEpoch --> ValidateFilo
+                ValidateFilo --> CheckFiloStop: Check
+                CheckFiloStop --> FiloEpoch: Continue
+                CheckFiloStop --> AnalyzeWeights: Stop
+                AnalyzeWeights --> [*]
+            }
+            
+            state join_models <<join>>
+            TrainBaseline --> join_models
+            TrainFilo --> join_models
+            join_models --> [*]
+        }
+        
+        TrainModels --> EvaluateFold
+        EvaluateFold --> InitializeFold: Next Fold
+        EvaluateFold --> [*]: All Folds Done
+    }
+
+    ModelTraining --> Evaluation: Training Complete
+
+    state Evaluation {
+        [*] --> AggregateResults
+        AggregateResults --> ComputeMetrics
+        
+        state ComputeMetrics {
+            [*] --> CalcAUC
+            CalcAUC --> CalcF1
+            CalcF1 --> CalcPrecision
+            CalcPrecision --> CalcRecall
+            CalcRecall --> [*]
+        }
+        
+        ComputeMetrics --> StatisticalTests
+        
+        state StatisticalTests {
+            [*] --> PairedTTest
+            PairedTTest --> EffectSize
+            EffectSize --> SignificanceCheck
+            SignificanceCheck --> [*]
+        }
+        
+        StatisticalTests --> [*]
+    }
+
+    Evaluation --> HypothesisValidation: Results Ready
+
+    state HypothesisValidation {
+        [*] --> fork_hypotheses
+        
+        state fork_hypotheses <<fork>>
+        fork_hypotheses --> ValidateH21
+        fork_hypotheses --> ValidateH32
+        fork_hypotheses --> ValidateH42
+        fork_hypotheses --> ValidateH52
+        
+        ValidateH21: Terminal Leaves Analysis
+        ValidateH32: Performance Comparison
+        ValidateH42: Structure Correlation
+        ValidateH52: Verified User Impact
+        
+        state join_hypotheses <<join>>
+        ValidateH21 --> join_hypotheses
+        ValidateH32 --> join_hypotheses
+        ValidateH42 --> join_hypotheses
+        ValidateH52 --> join_hypotheses
+        
+        join_hypotheses --> GenerateReport
+        GenerateReport --> [*]
+    }
+
+    HypothesisValidation --> Visualization: Validation Complete
+
+    state Visualization {
+        [*] --> CreatePlots
+        CreatePlots --> GenerateHTML
+        GenerateHTML --> SaveResults
+        SaveResults --> [*]
+    }
+
+    Visualization --> [*]: Pipeline Complete
+
+    %% Inference State (separate flow)
+    state Inference {
+        [*] --> LoadModel
+        LoadModel --> ReceiveCascade
+        ReceiveCascade --> ExtractInferenceFeatures
+        
+        state ExtractInferenceFeatures {
+            [*] --> fork_inf_features
+            state fork_inf_features <<fork>>
+            fork_inf_features --> GetSemantic
+            fork_inf_features --> GetPhylogenetic
+            
+            state join_inf_features <<join>>
+            GetSemantic --> join_inf_features
+            GetPhylogenetic --> join_inf_features
+            join_inf_features --> [*]
+        }
+        
+        ExtractInferenceFeatures --> Predict
+        
+        state Predict {
+            [*] --> Tokenize
+            Tokenize --> ForwardPass
+            ForwardPass --> GetProbability
+            GetProbability --> Classify
+            Classify --> [*]: Fake/Real
+        }
+        
+        Predict --> [*]
+    }

@@ -1,0 +1,128 @@
+graph TB
+    %% Component Architecture Diagram
+
+    subgraph "Data Layer"
+        PHEME[PHEME Dataset<br/>5 events, 5802 cascades]
+        JSON[JSON Tweet Files]
+        CSV[Processed CSV Files]
+        PKL[Embedding Pickles]
+    end
+
+    subgraph "Processing Components"
+        subgraph "Basic Processing"
+            BasicProc[PHEMEProcessor<br/>12 basic features]
+            TreeBuilder[Cascade Tree Builder<br/>NetworkX graphs]
+        end
+        
+        subgraph "Advanced Processing"
+            AdvProc[PHEMEAdvancedProcessor<br/>70 TAGs features]
+            TAGs[TAGConstructor<br/>Phylogenetic analysis]
+            SBERT[SentenceTransformer<br/>Semantic embeddings]
+        end
+    end
+
+    subgraph "Feature Components"
+        SemFeat[Semantic Features<br/>384 dimensions]
+        PhyloBasic[Basic Phylogenetic<br/>12 features]
+        PhyloAdv[Advanced Phylogenetic<br/>70 TAGs features]
+    end
+
+    subgraph "Model Components"
+        subgraph "Baseline System"
+            BaseModel[BaselineTransformer<br/>Semantic only]
+            BaseTokenizer[Semantic Tokenizer<br/>Linear projection]
+        end
+        
+        subgraph "Filo-Transformer System"
+            FiloModel[FiloTransformerTAGs<br/>Multi-modal fusion]
+            SemTokenizer[Semantic Tokenizer<br/>384 to 256]
+            PhyloTokenizers[Phylogenetic Tokenizers<br/>70 x 1 to 256]
+            FusionModule[Fusion Mechanism<br/>Attention + Gating]
+        end
+        
+        TransEncoder[Transformer Encoder<br/>3 layers, 8 heads]
+        Classifier[Classification Head<br/>Binary output]
+    end
+
+    subgraph "Training Components"
+        DataLoader[PyTorch DataLoader<br/>Batch processing]
+        Optimizer[Adam Optimizer<br/>LR: 3e-5]
+        LossFunc[BCE Loss Function]
+        EarlySto[Early Stopping<br/>Patience: 15]
+        CrossVal[5-Fold Cross-Validation<br/>Stratified splits]
+    end
+
+    subgraph "Evaluation Components"
+        Metrics[Performance Metrics<br/>AUC, F1, Precision, Recall]
+        StatTests[Statistical Tests<br/>t-test, Mann-Whitney]
+        Visualizer[Visualization Engine<br/>Plotly, Matplotlib]
+        Reporter[Report Generator<br/>HTML, JSON]
+    end
+
+    subgraph "Configuration"
+        Config[OptimalConfig<br/>Hyperparameters]
+        Seeds[Random Seeds<br/>Reproducibility]
+    end
+
+    %% Data Flow Connections
+    PHEME --> JSON
+    JSON --> BasicProc
+    JSON --> AdvProc
+    BasicProc --> TreeBuilder
+    TreeBuilder --> PhyloBasic
+    
+    AdvProc --> TAGs
+    AdvProc --> SBERT
+    TAGs --> PhyloAdv
+    SBERT --> SemFeat
+    
+    BasicProc --> CSV
+    AdvProc --> CSV
+    SBERT --> PKL
+    
+    %% Model Flow - Baseline
+    SemFeat --> BaseTokenizer
+    BaseTokenizer --> BaseModel
+    BaseModel --> TransEncoder
+    
+    %% Model Flow - Filo-Transformer
+    SemFeat --> SemTokenizer
+    PhyloAdv --> PhyloTokenizers
+    SemTokenizer --> FusionModule
+    PhyloTokenizers --> FusionModule
+    FusionModule --> FiloModel
+    FiloModel --> TransEncoder
+    
+    TransEncoder --> Classifier
+    
+    %% Training Flow
+    Classifier --> DataLoader
+    DataLoader --> Optimizer
+    Optimizer --> LossFunc
+    LossFunc --> EarlySto
+    Config --> Optimizer
+    Seeds --> CrossVal
+    CrossVal --> DataLoader
+    
+    %% Evaluation Flow
+    EarlySto --> Metrics
+    Metrics --> StatTests
+    StatTests --> Visualizer
+    StatTests --> Reporter
+    
+    %% Style definitions
+    classDef dataClass fill:#bbdefb,stroke:#1565c0,stroke-width:2px
+    classDef processClass fill:#ffe0b2,stroke:#ef6c00,stroke-width:2px
+    classDef featureClass fill:#e1bee7,stroke:#6a1b9a,stroke-width:2px
+    classDef modelClass fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    classDef trainClass fill:#ffcdd2,stroke:#c62828,stroke-width:2px
+    classDef evalClass fill:#f8bbd0,stroke:#ad1457,stroke-width:2px
+    classDef configClass fill:#b2dfdb,stroke:#00695c,stroke-width:2px
+    
+    class PHEME,JSON,CSV,PKL dataClass
+    class BasicProc,TreeBuilder,AdvProc,TAGs,SBERT processClass
+    class SemFeat,PhyloBasic,PhyloAdv featureClass
+    class BaseModel,BaseTokenizer,FiloModel,SemTokenizer,PhyloTokenizers,FusionModule,TransEncoder,Classifier modelClass
+    class DataLoader,Optimizer,LossFunc,EarlySto,CrossVal trainClass
+    class Metrics,StatTests,Visualizer,Reporter evalClass
+    class Config,Seeds configClass

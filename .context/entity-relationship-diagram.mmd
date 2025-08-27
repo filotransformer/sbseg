@@ -1,0 +1,185 @@
+erDiagram
+    %% Core Model Entities
+    FTTransformer {
+        int n_semantic_features "384 dimensions"
+        int n_phylogenetic_features "12 or 70 features"
+        int d_model "256 internal dimension"
+        int n_heads "8 attention heads"
+        int n_layers "3 transformer layers"
+        float dropout "0.2 regularization"
+        tensor semantic_tokenizer "Linear projection"
+        list phylogenetic_tokenizers "Feature tokenizers"
+        tensor cls_token "Classification token"
+        tensor positional_encoding "Position embeddings"
+        module transformer_encoder "Multi-layer transformer"
+        module classifier "Classification head"
+    }
+
+    FTTransformerClassifier {
+        float learning_rate "3e-5 Adam rate"
+        int batch_size "16 training batch"
+        int n_epochs "50 max epochs"
+        int early_stopping_patience "15 patience"
+        method fit "Training method"
+        method predict "Binary predictions"
+        method predict_proba "Probability output"
+    }
+
+    BaselineTransformer {
+        int num_features "384 semantic only"
+        module transformer "Same architecture"
+        bool uses_phylogenetic "false"
+    }
+
+    FiloTransformerTAGs {
+        int n_tags_features "70 phylogenetic"
+        module fusion_attention "Multi-head fusion"
+        module fusion_gate "Sigmoid gating"
+        list grouped_tokenizers "10 features/group"
+        tensor fusion_weights "Learned weights"
+    }
+
+    %% Data Processing Entities
+    PHEMEProcessor {
+        string base_path "Dataset location"
+        list events "5 PHEME events"
+        method extract_tweet_data "Parse JSON"
+        method build_cascade_tree "Tree structure"
+        method extract_cascade_features "12 features"
+        method process_all_events "Full processing"
+    }
+
+    PHEMEAdvancedProcessor {
+        module tag_constructor "TAGs extractor"
+        module sentence_transformer "SBERT model"
+        method extract_advanced_features "70 features"
+        method generate_embeddings "384-dim vectors"
+    }
+
+    TAGConstructor {
+        float similarity_threshold "0.7 cosine"
+        method build_tag "Graph construction"
+        method extract_phylogenetic_features "70 TAGs"
+        method calculate_centrality "PageRank etc"
+        method detect_communities "Graph clustering"
+        method analyze_evolution "Mutations/recomb"
+    }
+
+    %% Dataset Entities
+    PHEMEDataset {
+        string structure "5 events"
+        string format "JSON tweets"
+        int total_cascades "5802"
+        list events "charliehebdo ferguson etc"
+        bool has_labels "true"
+    }
+
+    Cascade {
+        string source_tweet_id "Root ID"
+        string source_text "Original text"
+        int label "0 or 1"
+        string event "Event category"
+        json tree_structure "Reply hierarchy"
+        int cascade_size "Total tweets"
+        int cascade_depth "Max depth"
+        float cascade_lifetime "Duration"
+    }
+
+    SemanticFeatures {
+        int dimensions "384"
+        string model "all-MiniLM-L6-v2"
+        string normalization "L2"
+        tensor embeddings "Dense vectors"
+    }
+
+    PhylogeneticFeatures {
+        int basic_count "12 features"
+        int advanced_count "70 features"
+        list centrality_metrics "PageRank etc"
+        list community_metrics "Modularity etc"
+        list evolution_metrics "Mutations etc"
+        list structural_metrics "Depth breadth"
+    }
+
+    %% Experiment Entities
+    ExperimentRunner {
+        dict optimal_config "Hyperparameters"
+        int n_folds "5-fold CV"
+        module stratified_kfold "Cross-validation"
+        list scalers "Standard Robust"
+        dict metrics "AUC F1 etc"
+        method run_baseline "Semantic only"
+        method run_filo "Full model"
+        method statistical_tests "Significance"
+    }
+
+    HypothesisValidator {
+        method validate_hypothesis_2_1 "Leaves analysis"
+        method validate_hypothesis_3_2 "Performance comp"
+        method validate_hypothesis_4_2 "Structure corr"
+        method validate_hypothesis_5_2 "Verified users"
+        string output_format "HTML plots"
+    }
+
+    OptimalConfig {
+        int seed "42"
+        int batch_size "16"
+        float learning_rate "3e-5"
+        int d_model "256"
+        int n_heads "8"
+        int n_layers "3"
+        float dropout "0.2"
+        float weight_decay "0.01"
+        int num_epochs "50"
+        int patience "15"
+        int n_folds "5"
+    }
+
+    %% Performance Metrics
+    PerformanceMetrics {
+        float accuracy "~0.88"
+        float precision "~0.89"
+        float recall "~0.88"
+        float f1_score "~0.89"
+        float auc_roc "~0.92"
+        float improvement "2-5 percent"
+    }
+
+    %% Relationships - Data Flow
+    PHEMEDataset ||--o{ Cascade : contains
+    Cascade ||--|| SemanticFeatures : generates
+    Cascade ||--|| PhylogeneticFeatures : extracts
+    
+    PHEMEProcessor ||--|| PHEMEDataset : processes
+    PHEMEProcessor ||--o{ PhylogeneticFeatures : creates_basic
+    
+    PHEMEAdvancedProcessor ||--|| PHEMEProcessor : extends
+    PHEMEAdvancedProcessor ||--|| TAGConstructor : uses
+    PHEMEAdvancedProcessor ||--o{ PhylogeneticFeatures : creates_advanced
+    PHEMEAdvancedProcessor ||--o{ SemanticFeatures : generates
+    
+    TAGConstructor ||--o{ PhylogeneticFeatures : computes
+    
+    %% Model Relationships
+    FTTransformer ||--|| SemanticFeatures : processes
+    FTTransformer ||--|| PhylogeneticFeatures : processes
+    FTTransformer ||--|| FTTransformerClassifier : wrapped_by
+    
+    BaselineTransformer ||--|| SemanticFeatures : uses_only
+    
+    FiloTransformerTAGs ||--|| FTTransformer : extends
+    FiloTransformerTAGs ||--|| PhylogeneticFeatures : uses_70_features
+    
+    %% Experiment Relationships  
+    ExperimentRunner ||--|| OptimalConfig : uses
+    ExperimentRunner ||--|| BaselineTransformer : evaluates
+    ExperimentRunner ||--|| FiloTransformerTAGs : evaluates
+    ExperimentRunner ||--|| PerformanceMetrics : produces
+    
+    HypothesisValidator ||--|| ExperimentRunner : validates
+    HypothesisValidator ||--|| PerformanceMetrics : analyzes
+    
+    %% Training Flow
+    SemanticFeatures }|--|| FTTransformerClassifier : input_to
+    PhylogeneticFeatures }|--|| FTTransformerClassifier : input_to
+    FTTransformerClassifier ||--|| PerformanceMetrics : generates

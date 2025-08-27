@@ -1,0 +1,125 @@
+flowchart TB
+    %% Data Flow Diagram for Filo-Transformer Pipeline
+
+    %% Input Data
+    subgraph Input["📥 Input Data"]
+        PHEME[("PHEME Dataset<br/>5 events<br/>5802 cascades")]
+        JSON["JSON Tweet Files<br/>Source + Reactions"]
+    end
+
+    %% Data Processing Layer
+    subgraph Processing["⚙️ Data Processing"]
+        Extract["extract_tweet_data()<br/>Parse JSON structure"]
+        BuildTree["build_cascade_tree()<br/>Construct propagation tree"]
+        BasicFeats["extract_cascade_features()<br/>12 basic features"]
+        
+        subgraph Advanced["Advanced Processing"]
+            SBERT["SentenceTransformer<br/>all-MiniLM-L6-v2"]
+            TAG["TAGConstructor<br/>Tree Alignment Graphs"]
+            AdvFeats["70 phylogenetic features"]
+        end
+    end
+
+    %% Feature Generation
+    subgraph Features["🔢 Feature Extraction"]
+        Semantic["Semantic Features<br/>384 dimensions<br/>Dense embeddings"]
+        Phylo12["Basic Phylogenetic<br/>12 features<br/>Cascade metrics"]
+        Phylo70["Advanced Phylogenetic<br/>70 TAGs features<br/>Graph metrics"]
+    end
+
+    %% Model Architecture
+    subgraph Models["🧠 Model Architecture"]
+        subgraph Baseline["Baseline Model"]
+            BSemTok["Semantic Tokenizer<br/>Linear(384, 256)"]
+            BTrans["Transformer Encoder<br/>3 layers, 8 heads"]
+            BClass["Classifier Head<br/>Binary output"]
+        end
+        
+        subgraph Filo["Filo-Transformer"]
+            FSemTok["Semantic Tokenizer<br/>Linear(384, 256)"]
+            FPhyTok["Phylogenetic Tokenizers<br/>70 × Linear(1, 256)"]
+            Fusion["Fusion Mechanism<br/>Attention + Gating"]
+            FTrans["Transformer Encoder<br/>3 layers, 8 heads"]
+            FClass["Classifier Head<br/>Binary output"]
+        end
+    end
+
+    %% Training Pipeline
+    subgraph Training["🎯 Training Pipeline"]
+        DataLoader["DataLoader<br/>Batch size: 16"]
+        Optimizer["Adam Optimizer<br/>LR: 3e-5"]
+        Loss["Binary Cross-Entropy"]
+        EarlySto["Early Stopping<br/>Patience: 15"]
+    end
+
+    %% Evaluation
+    subgraph Evaluation["📊 Evaluation"]
+        CV["5-Fold Cross-Validation<br/>Stratified splits"]
+        Metrics["Performance Metrics<br/>AUC, F1, Precision, Recall"]
+        Stats["Statistical Tests<br/>Significance analysis"]
+    end
+
+    %% Outputs
+    subgraph Outputs["📤 Outputs"]
+        Results["Experiment Results<br/>JSON format"]
+        Viz["Visualizations<br/>HTML plots"]
+        Weights["Fusion Weights<br/>Modality importance"]
+    end
+
+    %% Data Flow Connections
+    PHEME --> JSON
+    JSON --> Extract
+    Extract --> BuildTree
+    BuildTree --> BasicFeats
+    BuildTree --> TAG
+    Extract --> SBERT
+    
+    BasicFeats --> Phylo12
+    SBERT --> Semantic
+    TAG --> AdvFeats
+    AdvFeats --> Phylo70
+    
+    %% Baseline Flow
+    Semantic --> BSemTok
+    BSemTok --> BTrans
+    BTrans --> BClass
+    
+    %% Filo-Transformer Flow
+    Semantic --> FSemTok
+    Phylo70 --> FPhyTok
+    FSemTok --> Fusion
+    FPhyTok --> Fusion
+    Fusion --> FTrans
+    FTrans --> FClass
+    
+    %% Training Flow
+    BClass --> DataLoader
+    FClass --> DataLoader
+    DataLoader --> Optimizer
+    Optimizer --> Loss
+    Loss --> EarlySto
+    
+    %% Evaluation Flow
+    EarlySto --> CV
+    CV --> Metrics
+    Metrics --> Stats
+    
+    %% Output Flow
+    Stats --> Results
+    Stats --> Viz
+    Fusion --> Weights
+    
+    %% Styling
+    classDef input fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000000
+    classDef process fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000000
+    classDef feature fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000000
+    classDef model fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#000000
+    classDef train fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#000000
+    classDef output fill:#f1f8e9,stroke:#33691e,stroke-width:2px,color:#000000
+    
+    class PHEME,JSON input
+    class Extract,BuildTree,BasicFeats,SBERT,TAG,AdvFeats process
+    class Semantic,Phylo12,Phylo70 feature
+    class BSemTok,BTrans,BClass,FSemTok,FPhyTok,Fusion,FTrans,FClass model
+    class DataLoader,Optimizer,Loss,EarlySto,CV,Metrics,Stats train
+    class Results,Viz,Weights output
